@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fb8fb9" />
+    <meta
+      name="description"
+      content="HAILI CLUB 环球大富翁网页，根据最新版设计制作的32格旅行棋盘与撤离玩法。"
+    />
+    <title>HAILI CLUB · 环球大富翁</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+    <div class="sky-decor sky-decor--one" aria-hidden="true">✈</div>
+    <div class="sky-decor sky-decor--two" aria-hidden="true">🎲</div>
+    <div class="sky-decor sky-decor--three" aria-hidden="true">🪙</div>
+
+    <header class="site-header">
+      <a class="brand" href="#game" aria-label="返回环球大富翁棋盘">
+        <span>
+          <strong>HAILI CLUB · 海狸电竞</strong>
+          <small>WORLD TOUR MONOPOLY</small>
+        </span>
+      </a>
+
+      <nav class="header-actions" aria-label="页面功能">
+        <button class="icon-button" id="soundButton" type="button" aria-pressed="true">
+          <span aria-hidden="true">♪</span>
+          <span class="button-label">音效开</span>
+        </button>
+        <button class="icon-button" id="rulesButton" type="button">
+          <span aria-hidden="true">?</span>
+          <span class="button-label">玩法</span>
+        </button>
+        <button class="icon-button icon-button--danger" id="resetButton" type="button">
+          <span aria-hidden="true">↻</span>
+          <span class="button-label">重开</span>
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="pageTitle">
+        <div class="hero-symbols" aria-hidden="true">
+          <span>✈</span><span>🎲</span><span>🪙</span><span>🎟</span>
+        </div>
+        <div class="hero-eyebrow"><span></span> HAILI CLUB · 海狸电竞 <span></span></div>
+        <h1 id="pageTitle">
+          <span class="title-main">环球大富翁</span>
+        </h1>
+        <p>ROLL THE DICE · TRAVEL THE WORLD · COLLECT EVERY COIN</p>
+        <div class="hero-pills" aria-label="游戏特点">
+          <span>🌍 32 格棋盘</span>
+          <span>✈️ 21 个国家</span>
+          <span>🪙 原金币与玩法</span>
+          <span class="live-datetime-pill">🕒 时间和日期 · <time id="liveDateTime">读取中</time></span>
+        </div>
+      </section>
+
+      <section class="game-layout" id="game" aria-label="环球大富翁游戏区">
+        <div class="board-shell">
+          <div class="board-toolbar">
+            <div>
+              <span class="live-dot" aria-hidden="true"></span>
+              <strong>HAILI CLUB · 环球之旅进行中</strong>
+            </div>
+            <div class="toolbar-legend">
+              <span><i class="legend-dot legend-dot--asia"></i>亚洲</span>
+              <span><i class="legend-dot legend-dot--europe"></i>欧洲</span>
+              <span><i class="legend-dot legend-dot--america"></i>美洲</span>
+              <span><i class="legend-dot legend-dot--africa"></i>非洲</span>
+              <span><i class="legend-dot legend-dot--oceania"></i>大洋洲</span>
+            </div>
+          </div>
+
+          <div class="board-scroll" aria-label="棋盘可横向滚动">
+            <div class="board" id="board">
+              <div class="board-center">
+                <div class="center-cloud center-cloud--one" aria-hidden="true"></div>
+                <div class="center-cloud center-cloud--two" aria-hidden="true"></div>
+
+                <div class="center-brand">
+                  <span class="center-brand__kicker">HAILI CLUB PRESENTS</span>
+                  <div class="center-brand__line">
+                    <span class="plane-doodle" aria-hidden="true">✈</span>
+                    <div>
+                      <strong>环球</strong>
+                      <span>大富翁</span>
+                    </div>
+                  </div>
+                  <p>WORLD TOUR TYCOON</p>
+                </div>
+
+                <div class="board-guide" aria-label="棋盘旅行计划与规则">
+                  <section class="board-guide-plans">
+                    <div class="board-guide-title"><span>🧳</span><strong>旅行计划</strong><small>TRAVEL PLANS</small></div>
+                    <div class="board-plan-row"><b>初遇之旅</b><span>588R 保2688w</span><em>解锁3个国家</em></div>
+                    <div class="board-plan-row"><b>世界漫游</b><span>888R 保3888w</span><em>解锁6个国家</em></div>
+                    <div class="board-plan-row"><b>环球盛典</b><span>1588R 保5888w</span><em>解锁9个国家</em></div>
+                    <div class="board-guide-beaver" aria-hidden="true">🦫</div>
+                  </section>
+                  <div class="board-guide-columns">
+                    <section class="board-guide-copy board-guide-copy--profit">
+                      <div class="board-guide-title"><span>🪙</span><strong>边玩边赚</strong><small>PLAY &amp; EARN</small></div>
+                      <ul>
+                        <li>起始旅行资金￥20；700w=￥70、800w=￥80、1000w=￥100、1200w=￥130。</li>
+                        <li>1200w以上撤离成功，每多100w多￥10。</li>
+                        <li>100w大红额外加￥10，200w大红加￥20，以此类推。</li>
+                        <li>获得伤泪／复苏／赛季限定炫彩，直接获得￥130。</li>
+                      </ul>
+                    </section>
+                    <section class="board-guide-copy board-guide-copy--rules">
+                      <div class="board-guide-title"><span>🎲</span><strong>旅行规则</strong><small>TRAVEL RULES</small></div>
+                      <ul>
+                        <li>从机场出发，撤离成功才可掷一次骰子。</li>
+                        <li>到达景点缴纳门票；撤离失败扣￥10。</li>
+                        <li>金币不足须停留，补齐差价才可继续。</li>
+                        <li>车站、命运、事件、机会格可重新掷骰；再过机场得￥20。</li>
+                      </ul>
+                    </section>
+                  </div>
+                </div>
+
+                <section class="center-extraction-shell" aria-labelledby="centerExtractionTitle">
+                  <div class="center-extraction-heading">
+                    <div>
+                      <span class="center-extraction-icon" aria-hidden="true">🚁</span>
+                      <span><small>EXTRACTION CENTER</small><strong id="centerExtractionTitle">撤离结算中心</strong></span>
+                    </div>
+                    <span class="center-extraction-badge" id="centerStatusBadge">等待撤离</span>
+                  </div>
+
+                  <div class="center-extraction-body">
+                    <div id="centerExtractionMount" class="center-extraction-mount" aria-label="撤离结算操作区"></div>
+                    <aside class="center-live-panel" aria-label="实时结算状态">
+                      <div class="center-beaver" aria-hidden="true">🦫</div>
+                      <span class="center-live-kicker">LIVE STATUS</span>
+                      <h3>金币钱包</h3>
+                      <div class="center-coin-display"><span>￥</span><strong id="centerCoinValue">20</strong><small>金币</small></div>
+                      <div class="center-live-stats">
+                        <div><small>待缴费用</small><strong id="centerDebtValue">￥0</strong></div>
+                        <div><small>掷骰资格</small><strong id="centerCreditValue">未获得</strong></div>
+                      </div>
+                      <div class="center-effect-row"><small>当前效果</small><strong id="centerEffectValue">无</strong></div>
+                      <div class="center-journey-progress">
+                        <div><small>棋盘进度</small><strong id="centerProgressValue">1 / 32 格</strong></div>
+                        <span><i id="centerProgressBar"></i></span>
+                      </div>
+                      <div class="center-route-stack">
+                        <div class="center-route-item">
+                          <span aria-hidden="true">✈</span>
+                          <div class="center-route-copy">
+                            <p><small>当前所在</small><strong id="centerLocationValue">国内国际机场</strong></p>
+                            <i aria-hidden="true">↓</i>
+                            <p><small>下一站预览</small><strong id="centerNextValue">马来西亚 · ￥120</strong></p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="center-next-action">
+                        <span aria-hidden="true">GO</span>
+                        <p><small>下一步行动</small><strong id="centerActionValue">先完成撤离结算</strong></p>
+                      </div>
+                    </aside>
+                  </div>
+
+                  <div class="center-extraction-steps" aria-label="撤离流程">
+                    <div><span>01</span><p><small>选择结算</small><strong>填写带出价值</strong></p></div>
+                    <i aria-hidden="true">›</i>
+                    <div><span>02</span><p><small>完成对局</small><strong>确认撤离结果</strong></p></div>
+                    <i aria-hidden="true">›</i>
+                    <div><span>03</span><p><small>继续旅行</small><strong>获得掷骰资格</strong></p></div>
+                  </div>
+                </section>
+
+                <div class="world-map-card" aria-label="环球航线示意图">
+                  <svg viewBox="0 0 640 265" role="img" aria-label="从亚洲飞往世界各洲的可爱航线地图">
+                    <defs>
+                      <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#6393ac" flood-opacity=".15" />
+                      </filter>
+                    </defs>
+                    <g class="map-grid" opacity=".18">
+                      <path d="M20 54H620M20 106H620M20 158H620M20 210H620" />
+                      <path d="M120 20V245M220 20V245M320 20V245M420 20V245M520 20V245" />
+                    </g>
+                    <g filter="url(#softShadow)" class="continents">
+                      <path class="land land--america" d="M68 50l34-22 45 12 11 24-21 22-2 30-25 23-8 41-22 16-13-36 12-31-20-32z" />
+                      <path class="land land--america" d="M130 151l30 18 20 35-10 36-24 11-11-30-18-25z" />
+                      <path class="land land--europe" d="M280 64l26-20 42 5 21 19-17 18-33-1-13 15-35-10z" />
+                      <path class="land land--africa" d="M303 101l48-3 29 30-10 55-31 43-25-19-8-43-24-25z" />
+                      <path class="land land--asia" d="M366 56l58-24 87 15 48 38-31 34-46-12-33 31-32-23-43-7-24-27z" />
+                      <path class="land land--oceania" d="M496 174l43-20 39 26-14 35-51 4-29-24z" />
+                    </g>
+                    <g class="flight-paths">
+                      <path d="M465 116C398 36 249 30 134 84" />
+                      <path d="M467 119C410 123 376 152 347 178" />
+                      <path d="M472 121C527 118 551 149 542 180" />
+                    </g>
+                    <g class="map-pins">
+                      <circle cx="470" cy="119" r="10" />
+                      <circle cx="134" cy="84" r="7" />
+                      <circle cx="347" cy="178" r="7" />
+                      <circle cx="542" cy="180" r="7" />
+                    </g>
+                    <text x="481" y="112">出发</text>
+                    <text x="100" y="70">美洲</text>
+                    <text x="330" y="205">非洲</text>
+                    <text x="547" y="203">大洋洲</text>
+                    <text x="289" y="49">欧洲</text>
+                    <text x="494" y="67">亚洲</text>
+                    <text class="plane-on-route" x="277" y="62">✈</text>
+                  </svg>
+
+                  <div class="mascot" aria-label="HAILI CLUB 吉祥物">
+                    <svg viewBox="0 0 180 210" role="img" aria-label="戴着飞行帽的海狸队长">
+                      <ellipse cx="89" cy="190" rx="67" ry="14" fill="#7d5870" opacity=".13" />
+                      <ellipse cx="43" cy="90" rx="29" ry="37" fill="#8f5c42" />
+                      <ellipse cx="137" cy="90" rx="29" ry="37" fill="#8f5c42" />
+                      <circle cx="90" cy="94" r="68" fill="#b87955" />
+                      <path d="M31 70Q45 15 91 16Q138 15 151 70Q124 50 90 51Q57 50 31 70" fill="#7fcfea" />
+                      <path d="M53 51Q89 13 128 50L120 67Q89 48 59 68Z" fill="#a8e5f5" />
+                      <rect x="76" y="17" width="29" height="15" rx="7" fill="#fff" />
+                      <circle cx="90" cy="24" r="5" fill="#ff7faf" />
+                      <ellipse cx="90" cy="120" rx="47" ry="39" fill="#e9bb91" />
+                      <ellipse cx="67" cy="91" rx="8" ry="11" fill="#48343a" />
+                      <ellipse cx="113" cy="91" rx="8" ry="11" fill="#48343a" />
+                      <circle cx="64" cy="87" r="3" fill="#fff" />
+                      <circle cx="110" cy="87" r="3" fill="#fff" />
+                      <path d="M82 109Q90 101 98 109Q98 118 90 120Q82 118 82 109" fill="#49343a" />
+                      <path d="M90 119Q77 129 70 121M90 119Q103 129 111 121" fill="none" stroke="#49343a" stroke-width="4" stroke-linecap="round" />
+                      <rect x="72" y="127" width="17" height="24" rx="4" fill="#fffdf4" stroke="#cfaa81" stroke-width="2" />
+                      <rect x="91" y="127" width="17" height="24" rx="4" fill="#fffdf4" stroke="#cfaa81" stroke-width="2" />
+                      <path d="M45 146Q90 165 136 146L142 196H37Z" fill="#fb78a7" />
+                      <path d="M65 157L90 175L115 157" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" />
+                      <circle cx="90" cy="178" r="8" fill="#ffe789" />
+                      <path d="M136 165q32 7 24 28q-24 12-42-2" fill="#9c6447" stroke="#744735" stroke-width="4" />
+                      <path d="M130 172l23 13M124 181l24 12" stroke="#c98961" stroke-width="3" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div class="center-footer">
+                  <div class="travel-card">
+                    <span class="travel-card__icon" aria-hidden="true">🛫</span>
+                    <span><small>当前航线</small><strong id="routeText">新加坡 → 悉尼</strong></span>
+                  </div>
+                  <div class="travel-card">
+                    <span class="travel-card__icon" aria-hidden="true">🏁</span>
+                    <span><small>本局目标</small><strong>集齐 5 洲 + 环球章</strong></span>
+                  </div>
+                  <div class="travel-card">
+                    <span class="travel-card__icon" aria-hidden="true">🎟</span>
+                    <span><small>旅行通行证</small><strong id="ownedCountCenter">0 / 24 地标</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="swipe-hint">← 手机上可以左右滑动查看完整棋盘 →</p>
+        </div>
+
+        <aside class="control-panel" aria-label="玩家控制台">
+          <section class="panel-card player-card">
+            <div class="player-avatar" aria-hidden="true">🦫</div>
+            <div class="player-info">
+              <span class="status-pill">PLAYER 01</span>
+              <h2>海狸队长</h2>
+              <p id="playerLocation">📍 新加坡 · 环球起点</p>
+            </div>
+            <div class="level-badge"><span>格</span><strong id="levelValue">0</strong></div>
+          </section>
+
+          <section class="wallet-card" aria-label="玩家资产">
+            <div>
+              <span class="wallet-icon" aria-hidden="true">￥</span>
+              <span><small>金币钱包</small><strong id="coinValue">20</strong></span>
+            </div>
+            <div>
+              <span class="wallet-icon wallet-icon--pink" aria-hidden="true">!</span>
+              <span><small>待缴费用</small><strong id="xpValue">0</strong></span>
+            </div>
+          </section>
+
+          <section class="panel-card dice-card">
+            <div class="card-heading">
+              <div>
+                <span class="section-kicker">NEXT MOVE</span>
+                <h3>先完成撤离</h3>
+              </div>
+              <span class="turn-counter">第 <strong id="turnValue">1</strong> 回合</span>
+            </div>
+
+            <div class="dice-stage" aria-live="polite">
+              <div class="dice" id="dice" data-face="1" aria-label="骰子点数 1">
+                <span class="pip pip--1"></span>
+                <span class="pip pip--2"></span>
+                <span class="pip pip--3"></span>
+                <span class="pip pip--4"></span>
+                <span class="pip pip--5"></span>
+                <span class="pip pip--6"></span>
+                <span class="pip pip--7"></span>
+              </div>
+              <div class="dice-copy">
+                <strong id="diceHeadline">撤离成功才可掷骰子</strong>
+                <span id="diceSubline">起始资金￥20，撤离失败扣￥10</span>
+              </div>
+            </div>
+
+            <div class="extraction-panel" aria-label="本局撤离结算">
+              <div class="extraction-heading"><span>本局结算</span><small>EXTRACTION</small></div>
+              <label class="extraction-field">
+                <span>带出价值</span>
+                <select id="extractionValue">
+                  <option value="70">700w · ￥70</option>
+                  <option value="80">800w · ￥80</option>
+                  <option value="100">1000w · ￥100</option>
+                  <option value="130" selected>1200w · ￥130</option>
+                  <option value="140">1300w · ￥140</option>
+                  <option value="150">1400w · ￥150</option>
+                  <option value="160">1500w · ￥160</option>
+                  <option value="170">1600w · ￥170</option>
+                  <option value="180">1700w · ￥180</option>
+                  <option value="190">1800w · ￥190</option>
+                  <option value="200">1900w · ￥200</option>
+                  <option value="210">2000w · ￥210</option>
+                </select>
+              </label>
+              <div class="extraction-extras">
+                <label><span>大红价值</span><select id="bigRedValue"><option value="0">无</option><option value="10">100w +10</option><option value="20">200w +20</option><option value="30">300w +30</option></select></label>
+                <label><span>本局击杀</span><input id="killCount" type="number" min="0" max="30" value="0" inputmode="numeric" /></label>
+              </div>
+              <label class="special-loot"><input id="specialLoot" type="checkbox" /><span>获得伤泪／复苏／赛季限定炫彩 <strong>+￥130</strong></span></label>
+              <div class="settlement-actions">
+                <button id="successButton" type="button"><span>✓</span>撤离成功</button>
+                <button id="failureButton" type="button"><span>×</span>撤离失败</button>
+              </div>
+            </div>
+
+            <button class="primary-button" id="rollButton" type="button">
+              <span class="primary-button__shine"></span>
+              <span class="primary-button__icon" aria-hidden="true">🎲</span>
+              <span>掷骰子</span>
+              <kbd>SPACE</kbd>
+            </button>
+
+          </section>
+
+          <section class="panel-card landing-card" id="landingCard">
+            <div class="landing-icon" id="landingIcon" aria-hidden="true">🌏</div>
+            <div>
+              <span class="section-kicker">CURRENT STOP</span>
+              <h3 id="landingTitle">环球起点</h3>
+              <p id="landingText">你的世界旅行从这里开始。</p>
+            </div>
+          </section>
+
+          <section class="panel-card settlement-card">
+            <div class="card-heading">
+              <div>
+                <span class="section-kicker">GAME STATUS</span>
+                <h3>本局状态</h3>
+              </div>
+              <span class="stamp-count" id="statusBadge">等待撤离</span>
+            </div>
+            <div class="settlement-status-grid">
+              <div><small>掷骰资格</small><strong id="rollCreditStatus">未获得</strong></div>
+              <div><small>待缴费用</small><strong id="debtStatus">￥0</strong></div>
+              <div><small>特殊效果</small><strong id="effectStatus">无</strong></div>
+            </div>
+          </section>
+
+          <section class="panel-card log-card">
+            <div class="card-heading">
+              <div>
+                <span class="section-kicker">TRIP LOG</span>
+                <h3>旅行动态</h3>
+              </div>
+              <span class="tiny-plane" aria-hidden="true">✈</span>
+            </div>
+            <ol class="trip-log" id="tripLog" aria-live="polite">
+              <li><time>READY</time><span>起始旅行资金￥20，完成撤离后即可掷骰。</span></li>
+            </ol>
+          </section>
+        </aside>
+      </section>
+
+      <section class="poster-details" id="travelPlans" aria-labelledby="travelPlansTitle">
+        <div class="poster-section-heading">
+          <div>
+            <span class="poster-heading-icon" aria-hidden="true">✈</span>
+            <span class="section-kicker">HAILI CLUB WORLD TOUR GUIDE</span>
+            <h2 id="travelPlansTitle">HAILI CLUB · 环球旅行手册</h2>
+            <p>套餐、旅行收益与棋盘守则都整理在这里，出发前记得仔细阅读。</p>
+          </div>
+          <div class="poster-ticket" aria-label="环球旅行通行证">
+            <span>BW</span>
+            <div><small>WORLD PASS</small><strong>NO. 2026</strong></div>
+          </div>
+        </div>
+
+        <div class="plans-card poster-card">
+          <div class="poster-card-title">
+            <span class="poster-card-icon poster-card-icon--pink" aria-hidden="true">✈</span>
+            <div><span>WORLD TRAVEL ROUTE</span><h3>环球路线</h3></div>
+            <p id="planHeaderStatus"><strong>先选择路线，再确认下单</strong> · 当前未选择</p>
+          </div>
+
+          <div class="plan-list" id="planList">
+            <button class="plan-row" type="button" data-plan="初遇之旅" data-price="588R" data-guarantee="2688w" data-countries="3">
+              <span class="plan-index">01</span>
+              <span class="plan-name"><small>QUICK TOUR</small><strong>初遇之旅</strong></span>
+              <span class="plan-price"><strong>588R</strong><small>套餐价</small></span>
+              <span class="plan-guarantee">保 <strong>2688w</strong></span>
+              <span class="plan-spots">环游 <strong>3</strong> 个国家</span>
+              <span class="plan-tag"><i aria-hidden="true">○</i><b>选择路线</b></span>
+            </button>
+            <button class="plan-row plan-row--featured" type="button" data-plan="世界漫游" data-price="888R" data-guarantee="3888w" data-countries="6">
+              <span class="plan-index">02</span>
+              <span class="plan-name"><small>WORLD JOURNEY · 人气推荐</small><strong>世界漫游</strong></span>
+              <span class="plan-price"><strong>888R</strong><small>套餐价</small></span>
+              <span class="plan-guarantee">保 <strong>3888w</strong></span>
+              <span class="plan-spots">环游 <strong>6</strong> 个国家</span>
+              <span class="plan-tag"><i aria-hidden="true">○</i><b>选择路线</b></span>
+            </button>
+            <button class="plan-row" type="button" data-plan="环球盛典" data-price="1588R" data-guarantee="5888w" data-countries="9">
+              <span class="plan-index">03</span>
+              <span class="plan-name"><small>GRAND TOUR</small><strong>环球盛典</strong></span>
+              <span class="plan-price"><strong>1588R</strong><small>套餐价</small></span>
+              <span class="plan-guarantee">保 <strong>5888w</strong></span>
+              <span class="plan-spots">环游 <strong>9</strong> 个国家</span>
+              <span class="plan-tag"><i aria-hidden="true">○</i><b>选择路线</b></span>
+            </button>
+          </div>
+
+          <div class="route-order-panel" id="routeOrderPanel" aria-live="polite">
+            <div class="route-selection-summary">
+              <span class="route-selection-icon" aria-hidden="true">🧳</span>
+              <p><small>CURRENT SELECTION · 当前选择</small><strong id="selectedPlanTitle">尚未选择环球路线</strong><em id="selectedPlanSummary">请点击上方任一套餐，查看下单内容</em></p>
+            </div>
+            <button class="route-confirm-button" id="confirmPlanButton" type="button" disabled>请先选择路线</button>
+          </div>
+
+          <div class="route-order-flow" aria-label="客户下单流程">
+            <div><span>01</span><p><small>SELECT</small><strong>选择环球路线</strong></p></div>
+            <i aria-hidden="true">›</i>
+            <div><span>02</span><p><small>ORDER</small><strong>联系人工客服下单</strong></p></div>
+            <i aria-hidden="true">›</i>
+            <div><span>03</span><p><small>CONFIRM</small><strong>确认地图与打手</strong></p></div>
+            <i aria-hidden="true">›</i>
+            <div><span>04</span><p><small>START</small><strong>开始旅行并记录进度</strong></p></div>
+          </div>
+        </div>
+
+        <div class="poster-rules-grid">
+          <article class="poster-card guide-card guide-card--profit">
+            <div class="poster-card-title">
+              <span class="poster-card-icon poster-card-icon--gold" aria-hidden="true">🪙</span>
+              <div><span>TRAVEL &amp; EARN</span><h3>旅途生财</h3></div>
+            </div>
+            <ul class="poster-rule-list">
+              <li><span>01</span><p>起始旅行资金 <strong>￥20</strong>，按照每局结算价值发放旅行资金：<em>700w=￥70、800w=￥80、1000w=￥100、1200w=￥130</em>。</p></li>
+              <li><span>02</span><p><strong>1200w 以上</strong>撤离成功，每多 100w 可多 ￥10；旅程中需全程听从导游指挥。</p></li>
+              <li><span>03</span><p>100w 以上大红额外加 ￥10，200w 大红加 ￥20，以上以此类推。</p></li>
+              <li><span>04</span><p>旅行途中获得伤泪／复苏／赛季限定炫彩，无论撤离与否，可直接获得 <strong>￥130</strong>。</p></li>
+            </ul>
+            <div class="guide-sticker guide-sticker--gold" aria-hidden="true">BONUS<br><strong>+￥</strong></div>
+          </article>
+
+          <article class="poster-card guide-card guide-card--rules">
+            <div class="poster-card-title">
+              <span class="poster-card-icon poster-card-icon--mint" aria-hidden="true">🗺️</span>
+              <div><span>WORLD TOUR GUIDE</span><h3>环球指南</h3></div>
+            </div>
+            <ul class="poster-rule-list">
+              <li><span>01</span><p>从国内国际机场出发，<strong>撤离成功才可掷一次骰子</strong>。到达下一个国家需缴纳门票费；每次撤离失败，从金币钱包中扣除 ￥10。</p></li>
+              <li><span>02</span><p>若到达景点时金币不足，需要停留在此，直到再次撤离成功并补齐差价，才可继续掷骰子前进。</p></li>
+              <li><span>03</span><p>经过洲际车站时，缴纳车票后可继续前进；踩到车站，可重新掷骰子前往下一站。</p></li>
+              <li><span>04</span><p>触发事件、机会或命运，可重新掷骰子前往下一个国家；再次经过机场可获得 <strong>￥20</strong>。</p></li>
+            </ul>
+            <div class="guide-sticker guide-sticker--map" aria-hidden="true">GO!<br><strong>✈</strong></div>
+          </article>
+        </div>
+
+        <article class="order-notice poster-card">
+          <div class="notice-ribbon">
+            <span aria-hidden="true">★</span>
+            <div><small>GAMEPLAY INSTRUCTIONS</small><h3>玩法须知</h3></div>
+          </div>
+          <ol>
+            <li><span>1</span><p>本单包含卡，打手选图；指定地图需加 <strong>100R</strong>。撤离失败炸单，按店内须知享受炸补权益。</p></li>
+            <li><span>2</span><p>板板需听从打手指挥；若故意送人头、藏红、挂机或丢物资，本店有权直接结单。</p></li>
+            <li><span>3</span><p>连续炸单 <strong>5 局以上</strong>可要求更换组打手，单子进度为继承制（不重置）。</p></li>
+          </ol>
+          <div class="notice-illustration" aria-hidden="true">
+            <span class="notice-bag">★</span>
+            <span class="notice-car">🚗</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="info-strip" aria-label="游戏玩法简介">
+        <article>
+          <span class="info-number">01</span>
+          <div><h3>撤离结算</h3><p>撤离成功获得对应金币和一次掷骰资格；失败扣除￥10。</p></div>
+        </article>
+        <article>
+          <span class="info-number">02</span>
+          <div><h3>缴纳门票</h3><p>抵达景点缴纳海报标注的金币，余额不足则原地停留。</p></div>
+        </article>
+        <article>
+          <span class="info-number">03</span>
+          <div><h3>特殊格续行</h3><p>车站、命运、事件和机会格结算后，可重新掷骰前往下一站。</p></div>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-logo">H</div>
+      <p><strong>HAILI CLUB · 环球大富翁</strong><span>DELTA FORCE · MONOPOLY · WORLD TOUR 2026</span></p>
+      <p class="footer-note"><strong>Designed &amp; built by akihowaito</strong><span>最终解释权归 HAILI CLUB 所有</span></p>
+    </footer>
+
+    <dialog class="rules-dialog" id="rulesDialog">
+      <button class="dialog-close" id="closeRulesButton" type="button" aria-label="关闭玩法说明">×</button>
+      <span class="dialog-kicker">HOW TO PLAY</span>
+      <h2>HAILI CLUB 环球指南</h2>
+      <div class="rules-list">
+        <div><span>🪙</span><p><strong>金币钱包</strong>每局从￥20开始；根据带出价值发放￥70至￥160，特殊物品和大红另算。</p></div>
+        <div><span>🎲</span><p><strong>撤离与骰子</strong>从机场出发，撤离成功才可掷一次骰子；撤离失败从金币钱包扣除￥10。</p></div>
+        <div><span>🎟️</span><p><strong>景点门票</strong>抵达景点需缴纳对应门票，金币不足时停留原地，补齐差价才能继续。</p></div>
+        <div><span>🚉</span><p><strong>重新掷骰</strong>踩到车站、命运、事件或机会格，完成结算后可以重新掷骰前进。</p></div>
+        <div><span>🛫</span><p><strong>机场奖励</strong>再次经过国内国际机场可获得￥20；监狱需要缴纳￥150保释出狱。</p></div>
+      </div>
+      <button class="primary-button" id="startPlayingButton" type="button"><span>知道了，出发！</span></button>
+    </dialog>
+
+    <dialog class="result-dialog" id="resultDialog">
+      <div class="result-burst" aria-hidden="true">✦</div>
+      <div class="result-icon" id="resultIcon">💌</div>
+      <span class="dialog-kicker" id="resultKicker">TRAVEL EVENT</span>
+      <h2 id="resultTitle">遇到旅行事件</h2>
+      <p id="resultText">海狸队长的环球故事还在继续。</p>
+      <strong class="result-amount" id="resultAmount">+￥50</strong>
+      <button class="primary-button" id="closeResultButton" type="button"><span>继续旅行</span></button>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
