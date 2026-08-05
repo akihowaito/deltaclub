@@ -13,7 +13,7 @@ const tiles = [
   { type: "event", name: "天气炎热中暑", kicker: "事件", icon: "☀️", note: "丢失￥20", effect: "heat_loss" },
   { type: "city", name: "意大利", country: "意大利", flag: "IT", region: "europe", price: 160 },
   { type: "city", name: "英国", country: "英国", flag: "GB", region: "europe", price: 100 },
-  { type: "chance", name: "下一局养一只鼠鼠", kicker: "机会", icon: "🐭", note: "可获得￥5", effect: "mouse_bonus" },
+  { type: "chance", name: "下一局每只鼠鼠", kicker: "机会", icon: "🐭", note: "每只可赚取￥5", effect: "mouse_bonus" },
   { type: "city", name: "荷兰", country: "荷兰", flag: "NL", region: "europe", price: 90 },
   { type: "station", name: "欧洲站", kicker: "车站", icon: "🚉", note: "缴纳车票费 −￥20", price: 20 },
   { type: "city", name: "美国", country: "美国", flag: "US", region: "america", price: 150 },
@@ -59,7 +59,11 @@ const successButton = document.querySelector("#successButton");
 const failureButton = document.querySelector("#failureButton");
 const extractionValue = document.querySelector("#extractionValue");
 const bigRedValue = document.querySelector("#bigRedValue");
+const extractionExtras = document.querySelector("#extractionExtras");
+const killRecordField = document.querySelector("#killRecordField");
+const mouseRecordField = document.querySelector("#mouseRecordField");
 const killCount = document.querySelector("#killCount");
+const mouseCount = document.querySelector("#mouseCount");
 const specialLoot = document.querySelector("#specialLoot");
 const dice = document.querySelector("#dice");
 const coinValue = document.querySelector("#coinValue");
@@ -243,8 +247,17 @@ function updateLandingCard(tile) {
 function updateSettlementStatus() {
   const effects = [];
   if (state.doubleNext) effects.push("下次撤离成功双倍／失败减半");
-  if (state.killBonus) effects.push("下局每杀一人+￥5");
-  if (state.mouseBonus) effects.push("下局鼠鼠+￥5");
+  if (state.killBonus) effects.push("机会战绩：每次击杀+￥5");
+  if (state.mouseBonus) effects.push("机会战绩：每只鼠鼠+￥5");
+
+  const hasKillRecord = state.killBonus;
+  const hasMouseRecord = state.mouseBonus;
+  extractionExtras.classList.toggle("has-chance-record", hasKillRecord || hasMouseRecord);
+  extractionExtras.classList.toggle("has-two-chance-records", hasKillRecord && hasMouseRecord);
+  killRecordField.hidden = !hasKillRecord;
+  mouseRecordField.hidden = !hasMouseRecord;
+  if (!hasKillRecord) killCount.value = "0";
+  if (!hasMouseRecord) mouseCount.value = "0";
 
   rollCreditStatus.textContent = state.rollCredits > 0 ? "已获得×1" : "未获得";
   debtStatus.textContent = `￥${state.debt}`;
@@ -326,8 +339,13 @@ function settleSuccess() {
   const redBonus = Number(bigRedValue.value);
   const specialBonus = specialLoot.checked ? 130 : 0;
   const kills = Math.max(0, Math.min(30, Number(killCount.value) || 0));
+  const mice = Math.max(0, Math.min(30, Number(mouseCount.value) || 0));
   const killReward = state.killBonus ? kills * 5 : 0;
-  const mouseReward = state.mouseBonus ? 5 : 0;
+  const mouseReward = state.mouseBonus ? mice * 5 : 0;
+  const chanceRecords = [];
+  if (state.killBonus) chanceRecords.push(`击杀 ${kills} 人`);
+  if (state.mouseBonus) chanceRecords.push(`鼠鼠 ${mice} 只`);
+  const chanceReward = killReward + mouseReward;
   const baseBeforeDouble = reward + redBonus + specialBonus + killReward + mouseReward;
 
   if (state.doubleNext) {
@@ -341,6 +359,9 @@ function settleSuccess() {
   state.mouseBonus = false;
   state.coins += reward;
   addLog(`撤离成功，结算获得￥${reward}。`, "SUCCESS");
+  if (chanceRecords.length) {
+    addLog(`机会战绩：${chanceRecords.join("、")}，额外获得￥${chanceReward}。`, "CHANCE");
+  }
 
   if (state.debt > 0) {
     const paid = Math.min(state.coins, state.debt);
@@ -374,6 +395,7 @@ function settleFailure() {
   state.rollCredits = 0;
   state.killBonus = false;
   state.mouseBonus = false;
+  resetSettlementInputs();
   addLog(message, "FAILED");
   playTone(210, .2, "sine", .05);
   showToast(message);
@@ -383,6 +405,7 @@ function settleFailure() {
 function resetSettlementInputs() {
   bigRedValue.value = "0";
   killCount.value = "0";
+  mouseCount.value = "0";
   specialLoot.checked = false;
 }
 
@@ -507,7 +530,7 @@ function applySpecialTile(tile) {
     result = { icon: "☀️", kicker: "EVENT", title: "天气炎热中暑", text: "按照海报事件规则，丢失￥20。", amountText: `−￥${loss}` };
   } else if (tile.effect === "mouse_bonus") {
     state.mouseBonus = true;
-    result = { icon: "🐭", kicker: "CHANCE", title: "下一局养一只鼠鼠", text: "下一次撤离成功时可额外获得￥5。", amountText: "下局+￥5" };
+    result = { icon: "🐭", kicker: "CHANCE", title: "下一局每只鼠鼠", text: "机会战绩将显示鼠鼠数量；下一次撤离成功时，每只可额外获得￥5。", amountText: "每只+￥5" };
   } else if (tile.effect === "double_or_half") {
     state.doubleNext = true;
     result = { icon: "🎴", kicker: "DESTINY", title: "命运：下一个撤离", text: "撤离成功奖励双倍金币；撤离失败，现有金币减半。", amountText: "成功×2 · 失败÷2" };
@@ -516,7 +539,7 @@ function applySpecialTile(tile) {
     result = { icon: "🎁", kicker: "EVENT", title: "刮刮乐", text: "按照海报事件规则，获得￥20。", amountText: "+￥20" };
   } else if (tile.effect === "kill_bonus") {
     state.killBonus = true;
-    result = { icon: "🎯", kicker: "CHANCE", title: "下一局每杀一人", text: "下一次撤离结算时，每击杀一人可获得￥5。", amountText: "每杀一人+￥5" };
+    result = { icon: "🎯", kicker: "CHANCE", title: "下一局每杀一人", text: "机会战绩将显示击杀数量；下一次撤离结算时，每击杀一人可获得￥5。", amountText: "每杀一人+￥5" };
   }
 
   state.rollCredits = 1;

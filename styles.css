@@ -1846,6 +1846,26 @@ main {
   gap: 8px;
 }
 
+.extraction-extras:not(.has-chance-record) .big-red-field,
+.extraction-extras.has-two-chance-records .big-red-field {
+  grid-column: 1 / -1;
+}
+
+.chance-record-field[hidden] { display: none; }
+
+.chance-record-field > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.chance-record-field > span strong {
+  color: var(--pink-dark);
+  font-size: .9em;
+  white-space: nowrap;
+}
+
 .special-loot {
   padding: 8px 9px;
   display: flex;

@@ -327,9 +327,10 @@
                   <option value="210">2000w · ￥210</option>
                 </select>
               </label>
-              <div class="extraction-extras">
-                <label><span>大红价值</span><select id="bigRedValue"><option value="0">无</option><option value="10">100w +10</option><option value="20">200w +20</option><option value="30">300w +30</option></select></label>
-                <label><span>本局击杀</span><input id="killCount" type="number" min="0" max="30" value="0" inputmode="numeric" /></label>
+              <div class="extraction-extras" id="extractionExtras">
+                <label class="big-red-field"><span>大红价值</span><select id="bigRedValue"><option value="0">无</option><option value="10">100w +10</option><option value="20">200w +20</option><option value="30">300w +30</option></select></label>
+                <label class="chance-record-field" id="killRecordField" hidden><span>机会战绩 · 击杀数 <strong>每个 +￥5</strong></span><input id="killCount" type="number" min="0" max="30" value="0" inputmode="numeric" aria-label="本局机会战绩击杀数" /></label>
+                <label class="chance-record-field" id="mouseRecordField" hidden><span>机会战绩 · 鼠鼠数 <strong>每只 +￥5</strong></span><input id="mouseCount" type="number" min="0" max="30" value="0" inputmode="numeric" aria-label="本局机会战绩鼠鼠数" /></label>
               </div>
               <label class="special-loot"><input id="specialLoot" type="checkbox" /><span>获得伤泪／复苏／赛季限定炫彩 <strong>+￥130</strong></span></label>
               <div class="settlement-actions">
