@@ -45,17 +45,24 @@ function credentialText(credentials) {
 
 async function writeClipboard(text) {
   if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Some embedded browsers expose Clipboard API but deny permission.
+    }
   }
   const textarea = document.createElement("textarea");
   textarea.value = text;
   textarea.style.position = "fixed";
   textarea.style.opacity = "0";
   document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand("copy");
-  textarea.remove();
+  try {
+    textarea.select();
+    if (!document.execCommand("copy")) throw new Error("Clipboard copy was rejected");
+  } finally {
+    textarea.remove();
+  }
 }
 
 function renderAccounts(users) {
