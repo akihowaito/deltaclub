@@ -1,0 +1,6 @@
+.wrangler/
+.dev.vars*
+.env*
+private-credentials*
+PRIVATE-*
+migrations/*seed*

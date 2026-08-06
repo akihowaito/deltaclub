@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>HAILI CLUB · 客户账号管理</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/"><span>H</span><p><strong>HAILI CLUB</strong><small>ACCOUNT CONTROL CENTER</small></p></a>
+      <div class="header-actions"><a href="/">返回棋盘</a><button id="logoutButton" type="button">安全退出</button></div>
+    </header>
+
+    <main>
+      <section class="admin-hero">
+        <div><span class="eyebrow">PRIVATE ACCESS MANAGEMENT</span><h1>客户账号管理</h1><p>分别控制每位客户的使用权限。停用账号后，对方现有登录会立即失效。</p></div>
+        <div class="admin-identity"><span aria-hidden="true">🛡</span><p><small>当前管理员</small><strong id="adminName">正在验证…</strong></p></div>
+      </section>
+
+      <section class="summary-grid" aria-label="账号状态概览">
+        <article><span>👥</span><p><small>客户账号</small><strong id="totalCount">—</strong></p></article>
+        <article><span>✓</span><p><small>正常使用</small><strong id="activeCount">—</strong></p></article>
+        <article><span>⊘</span><p><small>已经停用</small><strong id="disabledCount">—</strong></p></article>
+      </section>
+
+      <section class="accounts-panel">
+        <div class="panel-heading"><div><span class="eyebrow">CUSTOMER ACCOUNTS</span><h2>独立客户账号</h2></div><button id="refreshButton" type="button">↻ 刷新状态</button></div>
+        <div class="account-message" id="accountMessage" role="status" aria-live="polite"></div>
+        <div class="account-list" id="accountList" aria-live="polite">
+          <div class="loading-card">正在读取账号状态…</div>
+        </div>
+      </section>
+
+      <aside class="security-note"><span aria-hidden="true">🔐</span><p><strong>停用是即时生效的</strong><small>停用会撤销该客户的全部登录状态；之后即使恢复账号，也必须重新输入密码登录。密码不会在管理页显示。</small></p></aside>
+    </main>
+
+    <template id="accountTemplate">
+      <article class="account-card">
+        <div class="account-avatar" aria-hidden="true">01</div>
+        <div class="account-info"><span class="account-status">正常使用</span><h3></h3><p class="account-username"></p></div>
+        <div class="account-meta"><span><small>最近登录</small><strong class="last-login">从未登录</strong></span><span><small>创建日期</small><strong class="created-date">—</strong></span></div>
+        <button class="toggle-account" type="button"></button>
+      </article>
+    </template>
+
+    <script src="admin.js"></script>
+  </body>
+</html>
+

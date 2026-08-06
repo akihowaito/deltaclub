@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "haili-club-monopoly",
+  "pages_build_output_dir": ".",
+  "compatibility_date": "2026-08-06",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "haili-club-auth",
+      "database_id": "a91c2f58-0f8a-490e-92d6-869cf513a51b",
+      "preview_database_id": "a91c2f58-0f8a-490e-92d6-869cf513a51b",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

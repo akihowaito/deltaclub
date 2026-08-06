@@ -26,6 +26,14 @@
       </a>
 
       <nav class="header-actions" aria-label="页面功能">
+        <span class="account-chip" id="accountChip" title="当前登录账号">
+          <span aria-hidden="true">👤</span>
+          <span id="accountLabel">验证中</span>
+        </span>
+        <a class="icon-button" id="adminAccessLink" href="admin" hidden>
+          <span aria-hidden="true">🛡</span>
+          <span class="button-label">管理</span>
+        </a>
         <button class="icon-button" id="soundButton" type="button" aria-pressed="true">
           <span aria-hidden="true">♪</span>
           <span class="button-label">音效开</span>
@@ -37,6 +45,10 @@
         <button class="icon-button icon-button--danger" id="resetButton" type="button">
           <span aria-hidden="true">↻</span>
           <span class="button-label">重开</span>
+        </button>
+        <button class="icon-button" id="accountLogoutButton" type="button">
+          <span aria-hidden="true">⇥</span>
+          <span class="button-label">退出</span>
         </button>
       </nav>
     </header>
@@ -115,8 +127,8 @@
                       <div class="board-guide-title"><span>🎲</span><strong>旅行规则</strong><small>TRAVEL RULES</small></div>
                       <ul>
                         <li>从机场出发，撤离成功才可掷一次骰子。</li>
-                        <li>到达景点缴纳门票；撤离失败扣￥10。</li>
-                        <li>金币不足须停留，补齐差价才可继续。</li>
+                        <li>抵达国家先保留金币，门票改为手动支付。</li>
+                        <li>攒够并支付整笔门票后，点亮国家继续前进。</li>
                         <li>车站、命运、事件、机会格可重新掷骰；再过机场得￥20。</li>
                       </ul>
                     </section>
@@ -140,12 +152,12 @@
                       <h3>金币钱包</h3>
                       <div class="center-coin-display"><span>￥</span><strong id="centerCoinValue">20</strong><small>金币</small></div>
                       <div class="center-live-stats">
-                        <div><small>待缴费用</small><strong id="centerDebtValue">￥0</strong></div>
+                        <div><small>待支付门票</small><strong id="centerDebtValue">￥0</strong></div>
                         <div><small>掷骰资格</small><strong id="centerCreditValue">未获得</strong></div>
                       </div>
                       <div class="center-effect-row"><small>当前效果</small><strong id="centerEffectValue">无</strong></div>
-                      <div class="center-journey-progress">
-                        <div><small>棋盘进度</small><strong id="centerProgressValue">1 / 32 格</strong></div>
+                      <div class="center-journey-progress" id="centerJourneyProgress">
+                        <div><small id="centerProgressLabel">棋盘进度</small><strong id="centerProgressValue">1 / 32 格</strong></div>
                         <span><i id="centerProgressBar"></i></span>
                       </div>
                       <div class="center-route-stack">
@@ -158,10 +170,10 @@
                           </div>
                         </div>
                       </div>
-                      <div class="center-next-action">
+                      <button class="center-next-action" id="centerPayTicketButton" type="button" disabled>
                         <span aria-hidden="true">GO</span>
                         <p><small>下一步行动</small><strong id="centerActionValue">先完成撤离结算</strong></p>
-                      </div>
+                      </button>
                     </aside>
                   </div>
 
@@ -170,7 +182,7 @@
                     <i aria-hidden="true">›</i>
                     <div><span>02</span><p><small>完成对局</small><strong>确认撤离结果</strong></p></div>
                     <i aria-hidden="true">›</i>
-                    <div><span>03</span><p><small>继续旅行</small><strong>获得掷骰资格</strong></p></div>
+                    <div><span>03</span><p><small>继续旅行</small><strong>攒够并支付门票</strong></p></div>
                   </div>
                 </section>
 
@@ -252,7 +264,7 @@
                   </div>
                   <div class="travel-card">
                     <span class="travel-card__icon" aria-hidden="true">🎟</span>
-                    <span><small>旅行通行证</small><strong id="ownedCountCenter">0 / 24 地标</strong></span>
+                    <span><small>已点亮国家</small><strong id="ownedCountCenter">0 / 21 国家</strong></span>
                   </div>
                 </div>
               </div>
@@ -279,8 +291,29 @@
             </div>
             <div>
               <span class="wallet-icon wallet-icon--pink" aria-hidden="true">!</span>
-              <span><small>待缴费用</small><strong id="xpValue">0</strong></span>
+              <span><small>待支付门票</small><strong id="xpValue">￥0</strong></span>
             </div>
+          </section>
+
+          <section class="panel-card ticket-payment-card" id="ticketPaymentCard" aria-live="polite" hidden>
+            <div class="ticket-payment-heading">
+              <span class="ticket-payment-icon" aria-hidden="true">🎟</span>
+              <div>
+                <span class="section-kicker">MANUAL PAYMENT</span>
+                <h3 id="pendingTicketName">国家门票待支付</h3>
+              </div>
+              <strong id="pendingTicketAmount">￥0</strong>
+            </div>
+            <div class="ticket-progress-copy">
+              <span>金币进度</span>
+              <strong id="ticketProgressText">￥0 / ￥0</strong>
+            </div>
+            <div class="ticket-progress-track" aria-hidden="true"><i id="ticketProgressBar"></i></div>
+            <button class="ticket-pay-button" id="payTicketButton" type="button" disabled>
+              <span aria-hidden="true">🔒</span>
+              <strong id="payTicketButtonText">金币不足</strong>
+            </button>
+            <p id="ticketPaymentHint">抵达不会自动扣款；攒够后手动支付整笔门票。</p>
           </section>
 
           <section class="panel-card dice-card">
@@ -367,7 +400,7 @@
             </div>
             <div class="settlement-status-grid">
               <div><small>掷骰资格</small><strong id="rollCreditStatus">未获得</strong></div>
-              <div><small>待缴费用</small><strong id="debtStatus">￥0</strong></div>
+              <div><small>待支付门票</small><strong id="debtStatus">￥0</strong></div>
               <div><small>特殊效果</small><strong id="effectStatus">无</strong></div>
             </div>
           </section>
@@ -475,10 +508,11 @@
               <div><span>WORLD TOUR GUIDE</span><h3>环球指南</h3></div>
             </div>
             <ul class="poster-rule-list">
-              <li><span>01</span><p>从国内国际机场出发，<strong>撤离成功才可掷一次骰子</strong>。到达下一个国家需缴纳门票费；每次撤离失败，从金币钱包中扣除 ￥10。</p></li>
-              <li><span>02</span><p>若到达景点时金币不足，需要停留在此，直到再次撤离成功并补齐差价，才可继续掷骰子前进。</p></li>
-              <li><span>03</span><p>经过洲际车站时，缴纳车票后可继续前进；踩到车站，可重新掷骰子前往下一站。</p></li>
+              <li><span>01</span><p>从国内国际机场出发，<strong>撤离成功才可掷一次骰子</strong>。抵达国家时不会自动扣款，门票会进入待支付状态；撤离失败最多从金币钱包扣除 ￥10，余额不会变成负数。</p></li>
+              <li><span>02</span><p>停留期间可继续完成撤离来累计金币。每个待支付地点都会显示金币进度；攒够后点击“支付并点亮”，一次性缴清门票才可继续前进。</p></li>
+              <li><span>03</span><p>经过洲际车站或监狱时，同样先显示待支付费用；手动缴清车票或保释费后，可重新掷骰子前往下一站。</p></li>
               <li><span>04</span><p>触发事件、机会或命运，可重新掷骰子前往下一个国家；再次经过机场可获得 <strong>￥20</strong>。</p></li>
+              <li><span>05</span><p>点亮套餐规定的国家数量后，本单即显示“环球成功”并结束；棋盘会锁定，如需继续只能点击<strong>重新开始</strong>。</p></li>
             </ul>
             <div class="guide-sticker guide-sticker--map" aria-hidden="true">GO!<br><strong>✈</strong></div>
           </article>
@@ -508,7 +542,7 @@
         </article>
         <article>
           <span class="info-number">02</span>
-          <div><h3>缴纳门票</h3><p>抵达景点缴纳海报标注的金币，余额不足则原地停留。</p></div>
+          <div><h3>手动支付</h3><p>抵达国家不自动扣款；进度达到 100% 后点击按钮，支付整笔门票并点亮该国。</p></div>
         </article>
         <article>
           <span class="info-number">03</span>
@@ -529,10 +563,11 @@
       <h2>HAILI CLUB 环球指南</h2>
       <div class="rules-list">
         <div><span>🪙</span><p><strong>金币钱包</strong>每局从￥20开始；根据带出价值发放￥70至￥160，特殊物品和大红另算。</p></div>
-        <div><span>🎲</span><p><strong>撤离与骰子</strong>从机场出发，撤离成功才可掷一次骰子；撤离失败从金币钱包扣除￥10。</p></div>
-        <div><span>🎟️</span><p><strong>景点门票</strong>抵达景点需缴纳对应门票，金币不足时停留原地，补齐差价才能继续。</p></div>
+        <div><span>🎲</span><p><strong>撤离与骰子</strong>从机场出发，撤离成功才可掷一次骰子；撤离失败最多扣￥10，钱包最低为￥0。</p></div>
+        <div><span>🎟️</span><p><strong>景点门票</strong>抵达后先显示待支付门票与金币进度，不会自动扣款；攒够后手动整笔支付才能继续。</p></div>
         <div><span>🚉</span><p><strong>重新掷骰</strong>踩到车站、命运、事件或机会格，完成结算后可以重新掷骰前进。</p></div>
         <div><span>🛫</span><p><strong>机场奖励</strong>再次经过国内国际机场可获得￥20；监狱需要缴纳￥150保释出狱。</p></div>
+        <div><span>🏆</span><p><strong>完成本单</strong>点亮套餐目标的 3／6／9 个国家后即环球成功，棋盘锁定；继续游玩必须重新开始。</p></div>
       </div>
       <button class="primary-button" id="startPlayingButton" type="button"><span>知道了，出发！</span></button>
     </dialog>
@@ -547,8 +582,27 @@
       <button class="primary-button" id="closeResultButton" type="button"><span>继续旅行</span></button>
     </dialog>
 
+    <dialog class="journey-complete-dialog" id="journeyCompleteDialog" aria-labelledby="journeyCompleteTitle">
+      <div class="completion-confetti" aria-hidden="true">
+        <span>✦</span><span>★</span><span>✈</span><span>✦</span><span>●</span><span>★</span>
+      </div>
+      <div class="completion-emblem" aria-hidden="true"><span>🌍</span><i>✓</i></div>
+      <span class="dialog-kicker">WORLD TOUR COMPLETE</span>
+      <h2 id="journeyCompleteTitle">环球成功！</h2>
+      <p class="completion-lead" id="journeyCompleteText">恭喜完成本次环球旅程，所有目标国家均已成功点亮。</p>
+      <div class="completion-stats">
+        <div><small>完成路线</small><strong id="completedPlanName">初遇之旅</strong></div>
+        <div><small>点亮国家</small><strong id="completedCountryCount">3 / 3</strong></div>
+        <div><small>剩余金币</small><strong id="completedCoinCount">￥0</strong></div>
+      </div>
+      <p class="completion-blessing">愿这趟环球之旅为你留下满满好运与闪耀回忆。感谢你的信任与陪伴，祝每一次出发都满载而归！</p>
+      <div class="completion-lock-note"><span aria-hidden="true">🔒</span><p><strong>本单已圆满结束</strong><small>棋盘已经锁定，不能继续前行。如需开启新旅程，请重新开始。</small></p></div>
+      <button class="completion-restart-button" id="restartJourneyButton" type="button"><span aria-hidden="true">↻</span><strong>重新开始新旅程</strong></button>
+    </dialog>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="game.js"></script>
+    <script src="auth-client.js"></script>
   </body>
 </html>

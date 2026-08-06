@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>HAILI CLUB · 专属账号登录</title>
+    <link rel="stylesheet" href="login.css" />
+  </head>
+  <body>
+    <main class="login-page">
+      <section class="login-visual" aria-label="HAILI CLUB 专属旅程">
+        <div class="login-brand"><span>H</span><p><strong>HAILI CLUB</strong><small>PRIVATE WORLD TOUR</small></p></div>
+        <div class="login-hero-copy">
+          <span class="eyebrow">MEMBERS ONLY · 专属访问</span>
+          <h1>你的环球旅程<br /><em>只为你开启</em></h1>
+          <p>每位客户拥有独立账号。链接可以分享，但没有有效账号仍然无法进入棋盘。</p>
+        </div>
+        <div class="route-art" aria-hidden="true">
+          <span class="route-globe">🌍</span>
+          <i></i><i></i><i></i>
+          <span class="route-plane">✈</span>
+          <b>★</b><b>◆</b><b>●</b>
+        </div>
+        <div class="security-points">
+          <span><i>✓</i> 独立客户账号</span>
+          <span><i>✓</i> 管理员可随时停用</span>
+          <span><i>✓</i> 7 天安全登录状态</span>
+        </div>
+      </section>
+
+      <section class="login-panel">
+        <div class="login-card">
+          <div class="login-card-heading">
+            <span class="lock-icon" aria-hidden="true">🔐</span>
+            <span class="eyebrow">SECURE SIGN IN</span>
+            <h2>登录专属账号</h2>
+            <p>请输入 HAILI CLUB 为你分配的账号与密码。</p>
+          </div>
+
+          <form id="loginForm" action="/api/auth/login" method="post" novalidate>
+            <label>
+              <span>客户账号</span>
+              <div class="input-shell"><i aria-hidden="true">👤</i><input id="username" name="username" type="text" autocomplete="username" maxlength="40" placeholder="例如：haili-001" required /></div>
+            </label>
+            <label>
+              <span>登录密码</span>
+              <div class="input-shell"><i aria-hidden="true">●</i><input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" placeholder="请输入专属密码" required /><button id="togglePassword" type="button" aria-label="显示密码" aria-pressed="false">显示</button></div>
+            </label>
+            <div class="login-message" id="loginMessage" role="alert" aria-live="polite"></div>
+            <button class="login-button" id="loginButton" type="submit"><span aria-hidden="true">✈</span><strong>验证账号并进入旅程</strong></button>
+          </form>
+
+          <div class="login-help"><span aria-hidden="true">🛡</span><p><strong>无法登录？</strong><small>请联系 HAILI CLUB 管理员确认账号是否已启用。</small></p></div>
+        </div>
+        <footer><strong>HAILI CLUB · 环球大富翁</strong><span>Protected account access · Designed by akihowaito</span></footer>
+      </section>
+    </main>
+    <script src="login.js"></script>
+  </body>
+</html>

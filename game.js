@@ -38,8 +38,14 @@ const defaultState = () => ({
   coins: 20,
   turn: 1,
   rollCredits: 0,
-  debt: 0,
-  debtName: "",
+  pendingFee: 0,
+  pendingFeeName: "",
+  pendingFeeKind: "",
+  pendingTileIndex: -1,
+  paidCountries: [],
+  journeyGoal: 0,
+  journeyPlan: "",
+  journeyComplete: false,
   doubleNext: false,
   killBonus: false,
   mouseBonus: false,
@@ -84,6 +90,13 @@ const effectStatus = document.querySelector("#effectStatus");
 const statusBadge = document.querySelector("#statusBadge");
 const rulesDialog = document.querySelector("#rulesDialog");
 const resultDialog = document.querySelector("#resultDialog");
+const closeResultButton = document.querySelector("#closeResultButton");
+const journeyCompleteDialog = document.querySelector("#journeyCompleteDialog");
+const journeyCompleteText = document.querySelector("#journeyCompleteText");
+const completedPlanName = document.querySelector("#completedPlanName");
+const completedCountryCount = document.querySelector("#completedCountryCount");
+const completedCoinCount = document.querySelector("#completedCoinCount");
+const restartJourneyButton = document.querySelector("#restartJourneyButton");
 const toast = document.querySelector("#toast");
 const soundButton = document.querySelector("#soundButton");
 const centerCoinValue = document.querySelector("#centerCoinValue");
@@ -91,11 +104,23 @@ const centerDebtValue = document.querySelector("#centerDebtValue");
 const centerCreditValue = document.querySelector("#centerCreditValue");
 const centerEffectValue = document.querySelector("#centerEffectValue");
 const centerStatusBadge = document.querySelector("#centerStatusBadge");
+const centerJourneyProgress = document.querySelector("#centerJourneyProgress");
+const centerProgressLabel = document.querySelector("#centerProgressLabel");
 const centerProgressValue = document.querySelector("#centerProgressValue");
 const centerProgressBar = document.querySelector("#centerProgressBar");
 const centerLocationValue = document.querySelector("#centerLocationValue");
 const centerNextValue = document.querySelector("#centerNextValue");
 const centerActionValue = document.querySelector("#centerActionValue");
+const centerPayTicketButton = document.querySelector("#centerPayTicketButton");
+const ticketPaymentCard = document.querySelector("#ticketPaymentCard");
+const pendingTicketName = document.querySelector("#pendingTicketName");
+const pendingTicketAmount = document.querySelector("#pendingTicketAmount");
+const ticketProgressText = document.querySelector("#ticketProgressText");
+const ticketProgressBar = document.querySelector("#ticketProgressBar");
+const payTicketButton = document.querySelector("#payTicketButton");
+const payTicketButtonText = document.querySelector("#payTicketButtonText");
+const ticketPaymentHint = document.querySelector("#ticketPaymentHint");
+const ownedCountCenter = document.querySelector("#ownedCountCenter");
 const liveDateTime = document.querySelector("#liveDateTime");
 
 function updateLiveDateTime() {
@@ -117,10 +142,12 @@ window.setInterval(updateLiveDateTime, 1000);
 
 function loadState() {
   try {
-    const stored = localStorage.getItem("beaver-world-monopoly-v2");
+    const stored = localStorage.getItem("beaver-world-monopoly-v3");
     if (!stored) return defaultState();
     const parsed = JSON.parse(stored);
-    return { ...defaultState(), ...parsed };
+    const loaded = { ...defaultState(), ...parsed };
+    loaded.paidCountries = Array.isArray(loaded.paidCountries) ? loaded.paidCountries : [];
+    return loaded;
   } catch {
     return defaultState();
   }
@@ -128,7 +155,7 @@ function loadState() {
 
 function saveState() {
   try {
-    localStorage.setItem("beaver-world-monopoly-v2", JSON.stringify(state));
+    localStorage.setItem("beaver-world-monopoly-v3", JSON.stringify(state));
   } catch {
     // Local storage is optional; the game still works without it.
   }
@@ -163,6 +190,8 @@ function renderBoard() {
         <span class="tile-flag" aria-hidden="true">${tile.flag}</span>
         <strong class="tile-name tile-name--country">${tile.name}</strong>
         <span class="tile-price">${tile.price}</span>
+        <span class="tile-payment-meter" aria-hidden="true"><i></i></span>
+        <span class="owned-pin" aria-label="已点亮" hidden>✓</span>
       `;
     } else {
       cell.classList.add("tile--special");
@@ -204,8 +233,20 @@ function previewTile(index) {
 }
 
 function syncBoardState(hopping = false) {
+  board.classList.toggle("is-journey-complete", state.journeyComplete);
   document.querySelectorAll(".tile").forEach((tile) => {
-    tile.classList.toggle("is-current", Number(tile.dataset.index) === state.position);
+    const tileIndex = Number(tile.dataset.index);
+    const paid = state.paidCountries.includes(tileIndex);
+    const pending = tileIndex === state.pendingTileIndex && state.pendingFee > 0;
+    const ready = pending && state.coins >= state.pendingFee;
+    tile.classList.toggle("is-current", tileIndex === state.position);
+    tile.classList.toggle("tile--owned", paid);
+    tile.classList.toggle("is-payment-pending", pending);
+    tile.classList.toggle("is-payment-ready", ready);
+    const pin = tile.querySelector(".owned-pin");
+    if (pin) pin.hidden = !paid;
+    const meter = tile.querySelector(".tile-payment-meter i");
+    if (meter) meter.style.width = pending ? `${feeProgressPercent()}%` : "0%";
   });
 
   let token = document.querySelector(".player-token");
@@ -221,27 +262,56 @@ function syncBoardState(hopping = false) {
 
 function updateUI() {
   const current = tiles[state.position];
+  const journeyTarget = getJourneyTargetForDisplay();
   coinValue.textContent = state.coins.toLocaleString("zh-CN");
-  debtWalletValue.textContent = state.debt.toLocaleString("zh-CN");
+  debtWalletValue.textContent = `￥${state.pendingFee.toLocaleString("zh-CN")}`;
   turnValue.textContent = state.turn;
   levelValue.textContent = state.position;
   playerLocation.textContent = `📍 ${current.name}`;
+  ownedCountCenter.textContent = `${state.paidCountries.length} / ${journeyTarget.goal} 国家`;
   updateLandingCard(current);
   updateSettlementStatus();
   updateLog();
   updateSoundButton();
   syncBoardState();
   saveState();
+  if (state.journeyComplete) window.setTimeout(showJourneyComplete, 0);
 }
 
 function updateLandingCard(tile) {
   landingIcon.textContent = tile.flag || tile.icon || "🌏";
   landingTitle.textContent = tile.name;
-  if (tile.type === "city") {
-    landingText.textContent = `环球国家格 · 门票￥${tile.price}`;
+  if (state.journeyComplete) {
+    landingText.textContent = `目标达成 · ${state.journeyPlan || "环球旅程"}已圆满结束`;
+    return;
+  }
+  const isPending = state.pendingTileIndex === state.position && state.pendingFee > 0;
+  if (isPending) {
+    landingText.textContent = `${state.pendingFeeName}￥${state.pendingFee}待支付 · 当前￥${state.coins} / ￥${state.pendingFee}`;
+  } else if (tile.type === "city") {
+    const isPaid = state.paidCountries.includes(state.position);
+    landingText.textContent = `环球国家格 · 门票￥${tile.price}${isPaid ? " · 已点亮" : ""}`;
   } else {
     landingText.textContent = tile.note || "完成本格结算后继续旅行。";
   }
+}
+
+function getSelectedPlanTarget() {
+  if (!selectedPlanButton) return null;
+  return {
+    plan: selectedPlanButton.dataset.plan,
+    goal: Number(selectedPlanButton.dataset.countries)
+  };
+}
+
+function getJourneyTargetForDisplay() {
+  if (state.journeyGoal > 0) return { plan: state.journeyPlan || "环球旅程", goal: state.journeyGoal };
+  return getSelectedPlanTarget() || { plan: "环球之旅", goal: 21 };
+}
+
+function updateJourneyGoalDisplay() {
+  const target = getJourneyTargetForDisplay();
+  ownedCountCenter.textContent = `${state.paidCountries.length} / ${target.goal} 国家`;
 }
 
 function updateSettlementStatus() {
@@ -259,15 +329,41 @@ function updateSettlementStatus() {
   if (!hasKillRecord) killCount.value = "0";
   if (!hasMouseRecord) mouseCount.value = "0";
 
-  rollCreditStatus.textContent = state.rollCredits > 0 ? "已获得×1" : "未获得";
-  debtStatus.textContent = `￥${state.debt}`;
-  effectStatus.textContent = effects.join("；") || "无";
-  debtWalletValue.textContent = `￥${state.debt}`;
+  if (state.journeyComplete) {
+    rollCreditStatus.textContent = "旅程结束";
+    debtStatus.textContent = "￥0";
+    effectStatus.textContent = "环球成功";
+    debtWalletValue.textContent = "￥0";
+    statusBadge.textContent = "环球成功";
+    diceHeadline.textContent = `${state.journeyPlan || "环球旅程"}已圆满完成`;
+    diceSubline.textContent = `已点亮 ${state.paidCountries.length} 个目标国家；如需继续只能重新开始`;
+    rollButton.disabled = true;
+    successButton.disabled = true;
+    failureButton.disabled = true;
+    centerCoinValue.textContent = state.coins.toLocaleString("zh-CN");
+    centerDebtValue.textContent = "￥0";
+    centerCreditValue.textContent = "旅程结束";
+    centerEffectValue.textContent = "环球成功";
+    centerStatusBadge.textContent = "目标达成";
+    ticketPaymentCard.hidden = true;
+    updateCenterJourney();
+    return;
+  }
 
-  if (state.debt > 0) {
-    statusBadge.textContent = "欠费停留";
-    diceHeadline.textContent = `还需补缴￥${state.debt}`;
-    diceSubline.textContent = `停留在${state.debtName}，撤离成功补齐差价后才能继续`;
+  rollCreditStatus.textContent = state.rollCredits > 0 ? "已获得×1" : "未获得";
+  const hasPendingFee = state.pendingFee > 0;
+  const feeReady = hasPendingFee && state.coins >= state.pendingFee;
+  const feeShortfall = hasPendingFee ? Math.max(0, state.pendingFee - state.coins) : 0;
+  debtStatus.textContent = `￥${state.pendingFee}`;
+  effectStatus.textContent = effects.join("；") || "无";
+  debtWalletValue.textContent = `￥${state.pendingFee}`;
+
+  if (hasPendingFee) {
+    statusBadge.textContent = feeReady ? "可以支付" : "攒金币中";
+    diceHeadline.textContent = `${state.pendingFeeName}待支付￥${state.pendingFee}`;
+    diceSubline.textContent = feeReady
+      ? "金币已攒够，请点击支付按钮点亮地点"
+      : `当前￥${state.coins}，还差￥${feeShortfall}；可继续撤离攒金币`;
   } else if (state.rollCredits > 0) {
     statusBadge.textContent = "可以掷骰";
     diceHeadline.textContent = "已获得一次掷骰资格";
@@ -278,28 +374,79 @@ function updateSettlementStatus() {
     diceSubline.textContent = "撤离失败扣￥10；命运效果可能改变结算";
   }
 
-  rollButton.disabled = isMoving || state.rollCredits < 1 || state.debt > 0;
+  rollButton.disabled = isMoving || state.rollCredits < 1 || hasPendingFee;
   successButton.disabled = isMoving || state.rollCredits > 0;
   failureButton.disabled = isMoving || state.rollCredits > 0;
 
   centerCoinValue.textContent = state.coins.toLocaleString("zh-CN");
-  centerDebtValue.textContent = `￥${state.debt}`;
+  centerDebtValue.textContent = `￥${state.pendingFee}`;
   centerCreditValue.textContent = state.rollCredits > 0 ? "已获得×1" : "未获得";
   centerEffectValue.textContent = effects.join("；") || "无";
   centerStatusBadge.textContent = statusBadge.textContent;
+  updateTicketPaymentCard();
   updateCenterJourney();
+}
+
+function feeProgressPercent() {
+  if (state.pendingFee <= 0) return 0;
+  return Math.min(100, Math.round((state.coins / state.pendingFee) * 100));
+}
+
+function updateTicketPaymentCard() {
+  const hasPendingFee = state.pendingFee > 0;
+  ticketPaymentCard.hidden = !hasPendingFee;
+  if (!hasPendingFee) return;
+
+  const shortfall = Math.max(0, state.pendingFee - state.coins);
+  const ready = shortfall === 0;
+  pendingTicketName.textContent = state.pendingFeeName;
+  pendingTicketAmount.textContent = `￥${state.pendingFee}`;
+  ticketProgressText.textContent = `￥${state.coins} / ￥${state.pendingFee}`;
+  ticketProgressBar.style.width = `${feeProgressPercent()}%`;
+  payTicketButton.disabled = !ready || isMoving;
+  payTicketButton.classList.toggle("is-ready", ready);
+  payTicketButton.querySelector("span").textContent = ready ? "✓" : "🔒";
+  payTicketButtonText.textContent = ready ? `支付￥${state.pendingFee}并继续` : `还差￥${shortfall}`;
+  ticketPaymentHint.textContent = ready
+    ? "金币已攒够。确认后一次性扣除费用，不会产生负数余额。"
+    : "抵达不会自动扣款；继续完成撤离，攒够后再手动支付。";
 }
 
 function updateCenterJourney() {
   const current = tiles[state.position];
   const next = tiles[(state.position + 1) % tiles.length];
-  centerProgressValue.textContent = `${state.position + 1} / ${tiles.length} 格`;
-  centerProgressBar.style.width = `${((state.position + 1) / tiles.length) * 100}%`;
+  if (state.journeyComplete) {
+    const target = getJourneyTargetForDisplay();
+    centerJourneyProgress.classList.add("is-ticket-progress", "is-complete");
+    centerProgressLabel.textContent = "本单环球目标";
+    centerProgressValue.textContent = `${state.paidCountries.length} / ${target.goal} 国家`;
+    centerProgressBar.style.width = "100%";
+    centerLocationValue.textContent = current.name;
+    centerNextValue.textContent = "本单已圆满完成";
+    centerPayTicketButton.disabled = true;
+    centerPayTicketButton.classList.remove("is-ready");
+    centerPayTicketButton.classList.add("is-complete");
+    centerActionValue.textContent = "环球成功 · 请重新开始";
+    return;
+  }
+  const hasPendingFee = state.pendingFee > 0;
+  const feeReady = hasPendingFee && state.coins >= state.pendingFee;
+  centerJourneyProgress.classList.remove("is-complete");
+  centerJourneyProgress.classList.toggle("is-ticket-progress", hasPendingFee);
+  centerProgressLabel.textContent = hasPendingFee ? `${state.pendingFeeName} · 金币进度` : "棋盘进度";
+  centerProgressValue.textContent = hasPendingFee ? `￥${state.coins} / ￥${state.pendingFee}` : `${state.position + 1} / ${tiles.length} 格`;
+  centerProgressBar.style.width = hasPendingFee ? `${feeProgressPercent()}%` : `${((state.position + 1) / tiles.length) * 100}%`;
   centerLocationValue.textContent = current.name;
   centerNextValue.textContent = next.type === "city" ? `${next.name} · ￥${next.price}` : `${next.kicker} · ${next.name}`;
 
-  if (state.debt > 0) {
-    centerActionValue.textContent = `补齐￥${state.debt}后继续`;
+  centerPayTicketButton.disabled = true;
+  centerPayTicketButton.classList.remove("is-ready", "is-complete");
+  if (hasPendingFee) {
+    const shortfall = Math.max(0, state.pendingFee - state.coins);
+    const paidAction = state.pendingFeeKind === "city" ? "并点亮" : "并继续";
+    centerActionValue.textContent = feeReady ? `点击支付￥${state.pendingFee}${paidAction}` : `还差￥${shortfall}，继续攒金币`;
+    centerPayTicketButton.disabled = !feeReady || isMoving;
+    centerPayTicketButton.classList.toggle("is-ready", feeReady);
   } else if (isMoving) {
     centerActionValue.textContent = "正在前往下一站";
   } else if (state.rollCredits > 0) {
@@ -334,7 +481,7 @@ function addLog(text, label = `T${state.turn.toString().padStart(2, "0")}`) {
 }
 
 function settleSuccess() {
-  if (isMoving || state.rollCredits > 0) return;
+  if (state.journeyComplete || isMoving || state.rollCredits > 0) return;
   let reward = Number(extractionValue.value);
   const redBonus = Number(bigRedValue.value);
   const specialBonus = specialLoot.checked ? 130 : 0;
@@ -363,24 +510,17 @@ function settleSuccess() {
     addLog(`机会战绩：${chanceRecords.join("、")}，额外获得￥${chanceReward}。`, "CHANCE");
   }
 
-  if (state.debt > 0) {
-    const paid = Math.min(state.coins, state.debt);
-    state.coins -= paid;
-    state.debt -= paid;
-    addLog(`向${state.debtName}补缴￥${paid}${state.debt > 0 ? `，仍欠￥${state.debt}` : "，费用已补齐"}。`, "PAY");
-    if (state.debt === 0) state.debtName = "";
-  }
-
-  if (state.debt === 0) state.rollCredits = 1;
+  if (state.pendingFee === 0) state.rollCredits = 1;
   resetSettlementInputs();
   playRewardSound();
   emitBoardParticles("￥", 12, "#dca934");
-  showToast(`撤离成功：+￥${reward}${state.debt > 0 ? ` · 仍欠￥${state.debt}` : " · 获得掷骰资格"}`);
+  const shortfall = Math.max(0, state.pendingFee - state.coins);
+  showToast(`撤离成功：+￥${reward}${state.pendingFee > 0 ? shortfall > 0 ? ` · 门票还差￥${shortfall}` : " · 已攒够，请手动支付" : " · 获得掷骰资格"}`);
   updateUI();
 }
 
 function settleFailure() {
-  if (isMoving || state.rollCredits > 0) return;
+  if (state.journeyComplete || isMoving || state.rollCredits > 0) return;
   let message;
   if (state.doubleNext) {
     const before = state.coins;
@@ -390,7 +530,9 @@ function settleFailure() {
   } else {
     const deducted = Math.min(10, state.coins);
     state.coins -= deducted;
-    message = `撤离失败，从金币钱包扣除￥${deducted}。`;
+    message = deducted === 10
+      ? "撤离失败，从金币钱包扣除￥10。"
+      : `撤离失败，余额不足￥10，扣除￥${deducted}后钱包为￥0。`;
   }
   state.rollCredits = 0;
   state.killBonus = false;
@@ -414,7 +556,7 @@ function wait(ms) {
 }
 
 async function rollDice() {
-  if (isMoving || state.rollCredits < 1 || state.debt > 0 || resultDialog.open || rulesDialog.open) return;
+  if (state.journeyComplete || isMoving || state.rollCredits < 1 || state.pendingFee > 0 || resultDialog.open || rulesDialog.open) return;
   isMoving = true;
   board.classList.add("is-moving");
   state.rollCredits = 0;
@@ -468,30 +610,17 @@ async function handleLanding() {
   const tile = tiles[state.position];
 
   if (tile.type === "city") {
-    const fullyPaid = chargeFee(tile.price, `${tile.name}门票`);
-    if (fullyPaid) {
-      addLog(`抵达${tile.name}，缴纳门票￥${tile.price}。`, "TICKET");
-      showToast(`${tile.name}门票：−￥${tile.price}`);
-    }
+    queueRequiredPayment(tile.price, `${tile.name}门票`, "city");
     return;
   }
 
   if (tile.type === "station") {
-    const fullyPaid = chargeFee(20, `${tile.name}车票`);
-    if (fullyPaid) {
-      state.rollCredits = 1;
-      addLog(`抵达${tile.name}，缴纳￥20车票，可重新掷骰。`, "STATION");
-      showResult({ icon: "🚉", kicker: "STATION", title: tile.name, text: "已缴纳￥20车票，可以重新掷骰前往下一站。", amountText: "−￥20 · 再掷一次" });
-    }
+    queueRequiredPayment(20, `${tile.name}车票`, "station");
     return;
   }
 
   if (tile.type === "prison") {
-    const fullyPaid = chargeFee(150, "监狱保释费");
-    if (fullyPaid) {
-      addLog("抵达监狱，缴纳￥150保释出狱。", "PRISON");
-      showResult({ icon: "🔒", kicker: "PRISON", title: "缴纳保释费", text: "已按照海报规则缴纳￥150保释出狱。", amountText: "−￥150" });
-    }
+    queueRequiredPayment(150, "监狱保释费", "prison");
     return;
   }
 
@@ -503,20 +632,83 @@ async function handleLanding() {
   applySpecialTile(tile);
 }
 
-function chargeFee(amount, label) {
-  if (state.coins >= amount) {
-    state.coins -= amount;
-    return true;
+function queueRequiredPayment(amount, label, kind) {
+  state.pendingFee = amount;
+  state.pendingFeeName = label;
+  state.pendingFeeKind = kind;
+  state.pendingTileIndex = state.position;
+  state.rollCredits = 0;
+  const shortfall = Math.max(0, amount - state.coins);
+  addLog(`抵达${label}，整笔￥${amount}待支付；金币钱包保留￥${state.coins}${shortfall > 0 ? `，还差￥${shortfall}` : "，已可支付"}。`, "WAIT");
+  showResult({
+    icon: kind === "city" ? "🎟️" : kind === "station" ? "🚉" : "🔒",
+    kicker: "MANUAL PAYMENT",
+    title: `${label}待支付`,
+    text: shortfall > 0
+      ? `不会自动扣款。当前金币￥${state.coins}，还差￥${shortfall}；请继续撤离攒够后手动支付。`
+      : "不会自动扣款。金币已经足够，请关闭提示后点击“支付并继续”。",
+    amountText: `￥${state.coins} / ￥${amount}`,
+    buttonText: "查看支付进度"
+  });
+}
+
+function payPendingFee() {
+  if (state.journeyComplete || isMoving || state.pendingFee <= 0) return;
+  if (state.coins < state.pendingFee) {
+    showToast(`金币不足：还差￥${state.pendingFee - state.coins}`);
+    return;
   }
 
-  const paid = state.coins;
-  state.coins = 0;
-  state.debt = amount - paid;
-  state.debtName = label;
+  const amount = state.pendingFee;
+  const label = state.pendingFeeName;
+  const kind = state.pendingFeeKind;
+  const tileIndex = state.pendingTileIndex;
+  state.coins -= amount;
+  state.pendingFee = 0;
+  state.pendingFeeName = "";
+  state.pendingFeeKind = "";
+  state.pendingTileIndex = -1;
+  state.rollCredits = 1;
+
+  if (kind === "city" && !state.paidCountries.includes(tileIndex)) {
+    state.paidCountries.push(tileIndex);
+    state.paidCountries.sort((a, b) => a - b);
+  }
+
+  const paidMessage = kind === "city" ? `${label}已支付，国家点亮` : kind === "station" ? `${label}已支付，可以再掷一次` : `${label}已支付，保释成功`;
+  addLog(`${paidMessage}；金币钱包剩余￥${state.coins}。`, "PAID");
+  playRewardSound();
+  emitBoardParticles(kind === "city" ? "✓" : "￥", 12, kind === "city" ? "#f1ba36" : "#58b8db");
+
+  if (kind === "city" && finishJourneyIfTargetReached()) {
+    updateUI();
+    emitBoardParticles("★", 24, "#f1ba36");
+    return;
+  }
+
+  showResult({
+    icon: kind === "city" ? "🌟" : kind === "station" ? "🚉" : "🔓",
+    kicker: "PAYMENT COMPLETE",
+    title: paidMessage,
+    text: "费用已整笔扣除，余额不会变成负数；现在可以继续掷骰前往下一站。",
+    amountText: `−￥${amount} · 可继续前进`,
+    buttonText: "继续掷骰"
+  });
+  updateUI();
+}
+
+function finishJourneyIfTargetReached() {
+  const selectedTarget = getSelectedPlanTarget();
+  if (state.journeyGoal <= 0 && selectedTarget) {
+    state.journeyGoal = selectedTarget.goal;
+    state.journeyPlan = selectedTarget.plan;
+  }
+
+  if (state.journeyGoal <= 0 || state.paidCountries.length < state.journeyGoal) return false;
+  state.journeyComplete = true;
   state.rollCredits = 0;
-  addLog(`${label}需￥${amount}，已支付￥${paid}，仍欠￥${state.debt}，原地停留。`, "OWE");
-  showResult({ icon: "🪙", kicker: "COINS NEEDED", title: "金币不足，原地停留", text: `需要通过撤离成功补齐${label}的差价，补齐后才能继续掷骰。`, amountText: `待缴￥${state.debt}` });
-  return false;
+  addLog(`环球成功！已完成「${state.journeyPlan}」并点亮 ${state.journeyGoal} 个国家，本单圆满结束。`, "COMPLETE");
+  return true;
 }
 
 function applySpecialTile(tile) {
@@ -583,13 +775,28 @@ function centerExtractionOnMobile() {
   scroller.scrollTo({ left: Math.max(0, targetLeft), behavior: "auto" });
 }
 
-function showResult({ icon, kicker, title, text, amountText }) {
+function showResult({ icon, kicker, title, text, amountText, buttonText = "继续旅行" }) {
   document.querySelector("#resultIcon").textContent = icon;
   document.querySelector("#resultKicker").textContent = kicker;
   document.querySelector("#resultTitle").textContent = title;
   document.querySelector("#resultText").textContent = text;
   document.querySelector("#resultAmount").textContent = amountText;
+  closeResultButton.querySelector("span").textContent = buttonText;
   if (!resultDialog.open) resultDialog.showModal();
+}
+
+function showJourneyComplete() {
+  if (!state.journeyComplete || journeyCompleteDialog.open) return;
+  if (resultDialog.open) resultDialog.close();
+  if (rulesDialog.open) rulesDialog.close();
+  const target = getJourneyTargetForDisplay();
+  journeyCompleteText.textContent = `恭喜完成「${target.plan}」，${target.goal} 个目标国家已全部成功点亮！`;
+  completedPlanName.textContent = target.plan;
+  completedCountryCount.textContent = `${state.paidCountries.length} / ${target.goal}`;
+  completedCoinCount.textContent = `￥${state.coins}`;
+  journeyCompleteDialog.showModal();
+  playRewardSound();
+  window.setTimeout(() => playTone(880, .2, "sine", .04), 180);
 }
 
 function showToast(message) {
@@ -631,9 +838,10 @@ function toggleSound() {
 }
 
 function resetGame() {
-  const approved = window.confirm("确定重新开始吗？当前金币、欠费和特殊效果都会重置。\n金币钱包将恢复为￥20，已锁定的环球路线也会解除。");
+  const approved = window.confirm("确定重新开始吗？当前金币、待支付门票、已点亮国家和特殊效果都会重置。\n金币钱包将恢复为￥20，已锁定的环球路线也会解除。");
   if (!approved) return;
   const keepSound = state.sound;
+  if (journeyCompleteDialog.open) journeyCompleteDialog.close();
   state = defaultState();
   state.sound = keepSound;
   setDiceFace(1);
@@ -647,12 +855,16 @@ function resetGame() {
 rollButton.addEventListener("click", rollDice);
 successButton.addEventListener("click", settleSuccess);
 failureButton.addEventListener("click", settleFailure);
+payTicketButton.addEventListener("click", payPendingFee);
+centerPayTicketButton.addEventListener("click", payPendingFee);
 soundButton.addEventListener("click", toggleSound);
 document.querySelector("#resetButton").addEventListener("click", resetGame);
 document.querySelector("#rulesButton").addEventListener("click", () => rulesDialog.showModal());
 document.querySelector("#closeRulesButton").addEventListener("click", () => rulesDialog.close());
 document.querySelector("#startPlayingButton").addEventListener("click", () => rulesDialog.close());
-document.querySelector("#closeResultButton").addEventListener("click", () => resultDialog.close());
+closeResultButton.addEventListener("click", () => resultDialog.close());
+restartJourneyButton.addEventListener("click", resetGame);
+journeyCompleteDialog.addEventListener("cancel", (event) => event.preventDefault());
 
 const planButtons = [...document.querySelectorAll(".plan-row")];
 const planList = document.querySelector("#planList");
@@ -665,6 +877,10 @@ let selectedPlanButton = null;
 let planConfirmed = false;
 
 function selectPlan(planButton, announce = true) {
+  if (state.journeyGoal > 0 && state.journeyPlan && planButton.dataset.plan !== state.journeyPlan) {
+    showToast(`本单已按「${state.journeyPlan}」开始，如需换档请点击顶部「重开」`);
+    return;
+  }
   if (planConfirmed) {
     showToast("路线已经锁定，如需更换请点击顶部「重开」");
     return;
@@ -696,6 +912,8 @@ function selectPlan(planButton, announce = true) {
     // Route selection still works when local storage is unavailable.
   }
 
+  updateJourneyGoalDisplay();
+
   if (announce) showToast(`已选择「${plan}」：${price} · 环游${countries}个国家`);
 }
 
@@ -703,6 +921,8 @@ function confirmSelectedPlan(announce = true) {
   if (!selectedPlanButton) return;
   planConfirmed = true;
   const { plan, price, guarantee, countries } = selectedPlanButton.dataset;
+  state.journeyGoal = Number(countries);
+  state.journeyPlan = plan;
   planList.classList.add("is-locked");
   routeOrderPanel.classList.add("is-confirmed");
   confirmPlanButton.classList.add("is-confirmed");
@@ -724,6 +944,11 @@ function confirmSelectedPlan(announce = true) {
   } catch {
     // Locking still works for the current page when local storage is unavailable.
   }
+
+  updateJourneyGoalDisplay();
+  saveState();
+
+  if (!state.journeyComplete && finishJourneyIfTargetReached()) updateUI();
 
   if (announce) showToast("路线已确认并锁定；如需更换，请点击顶部「重开」");
 }
@@ -754,6 +979,8 @@ function resetPlanSelection() {
   } catch {
     // Ignore unavailable local storage.
   }
+
+  updateJourneyGoalDisplay();
 }
 
 planButtons.forEach((planButton) => {
