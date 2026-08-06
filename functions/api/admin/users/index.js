@@ -4,39 +4,12 @@ import {
   json,
   toBase64Url
 } from "../../../_lib/auth.js";
-
-const PASSWORD_ITERATIONS = 100000;
-const UPPERCASE = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-const LOWERCASE = "abcdefghijkmnopqrstuvwxyz";
-const DIGITS = "23456789";
-const SYMBOLS = "!@#$%";
-const PASSWORD_ALPHABET = `${UPPERCASE}${LOWERCASE}${DIGITS}${SYMBOLS}`;
-
-function randomIndex(length) {
-  const limit = 256 - (256 % length);
-  const bytes = new Uint8Array(1);
-  do crypto.getRandomValues(bytes); while (bytes[0] >= limit);
-  return bytes[0] % length;
-}
-
-function randomCharacter(alphabet) {
-  return alphabet[randomIndex(alphabet.length)];
-}
-
-function generatePassword() {
-  const characters = [
-    randomCharacter(UPPERCASE),
-    randomCharacter(LOWERCASE),
-    randomCharacter(DIGITS),
-    randomCharacter(SYMBOLS)
-  ];
-  while (characters.length < 18) characters.push(randomCharacter(PASSWORD_ALPHABET));
-  for (let index = characters.length - 1; index > 0; index -= 1) {
-    const swapIndex = randomIndex(index + 1);
-    [characters[index], characters[swapIndex]] = [characters[swapIndex], characters[index]];
-  }
-  return characters.join("");
-}
+import {
+  PASSWORD_ITERATIONS,
+  decryptPassword,
+  encryptPassword,
+  generatePassword
+} from "../../../_lib/password-vault.js";
 
 async function nextCustomerNumber(database) {
   const row = await database.prepare(`
@@ -53,17 +26,38 @@ async function nextCustomerNumber(database) {
 export async function onRequestGet(context) {
   if (context.data.user?.role !== "admin") return json({ error: "没有管理员权限" }, { status: 403 });
   const result = await context.env.DB.prepare(`
-    SELECT id, username, display_name, active, last_login_at, created_at
+    SELECT id, username, display_name, active, last_login_at, created_at,
+           password_ciphertext, password_iv
       FROM users
      WHERE role = 'customer'
      ORDER BY id ASC
   `).all();
-  return json({ users: result.results || [] });
+  const users = await Promise.all((result.results || []).map(async (user) => {
+    let password = null;
+    if (context.env.ACCOUNT_PASSWORD_KEY && user.password_ciphertext && user.password_iv) {
+      try {
+        password = await decryptPassword(user.password_ciphertext, user.password_iv, context.env.ACCOUNT_PASSWORD_KEY);
+      } catch {
+        password = null;
+      }
+    }
+    return {
+      id: user.id,
+      username: user.username,
+      display_name: user.display_name,
+      active: user.active,
+      last_login_at: user.last_login_at,
+      created_at: user.created_at,
+      password
+    };
+  }));
+  return json({ users, vaultReady: Boolean(context.env.ACCOUNT_PASSWORD_KEY) });
 }
 
 export async function onRequestPost(context) {
   if (context.data.user?.role !== "admin") return json({ error: "没有管理员权限" }, { status: 403 });
   if (!isSameOrigin(context.request)) return json({ error: "请求来源无效" }, { status: 403 });
+  if (!context.env.ACCOUNT_PASSWORD_KEY) return json({ error: "密码保险库尚未配置" }, { status: 503 });
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const customerNumber = await nextCustomerNumber(context.env.DB);
@@ -78,15 +72,27 @@ export async function onRequestPost(context) {
     crypto.getRandomValues(saltBytes);
     const salt = toBase64Url(saltBytes);
     const passwordHash = await derivePasswordHash(password, salt, PASSWORD_ITERATIONS);
+    const encryptedPassword = await encryptPassword(password, context.env.ACCOUNT_PASSWORD_KEY);
 
     try {
       const now = Math.floor(Date.now() / 1000);
       const result = await context.env.DB.prepare(`
         INSERT INTO users (
           username, display_name, role, password_hash, password_salt,
-          password_iterations, active, created_at, updated_at
-        ) VALUES (?, ?, 'customer', ?, ?, ?, 1, ?, ?)
-      `).bind(username, displayName, passwordHash, salt, PASSWORD_ITERATIONS, now, now).run();
+          password_iterations, password_ciphertext, password_iv,
+          active, created_at, updated_at
+        ) VALUES (?, ?, 'customer', ?, ?, ?, ?, ?, 1, ?, ?)
+      `).bind(
+        username,
+        displayName,
+        passwordHash,
+        salt,
+        PASSWORD_ITERATIONS,
+        encryptedPassword.ciphertext,
+        encryptedPassword.iv,
+        now,
+        now
+      ).run();
 
       return json({
         ok: true,
@@ -97,7 +103,7 @@ export async function onRequestPost(context) {
           active: true
         },
         credentials: { username, password },
-        message: `${displayName} 已创建，请立即保存账号密码`
+        message: `${displayName} 已创建，账号密码已加密保存`
       }, { status: 201 });
     } catch (error) {
       const collision = String(error?.message || "").includes("UNIQUE constraint failed");
