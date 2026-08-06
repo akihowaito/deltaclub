@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   role TEXT NOT NULL DEFAULT 'customer' CHECK (role IN ('admin', 'customer')),
   password_hash TEXT NOT NULL,
   password_salt TEXT NOT NULL,
-  password_iterations INTEGER NOT NULL DEFAULT 210000,
+  password_iterations INTEGER NOT NULL DEFAULT 100000,
   active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
   failed_attempts INTEGER NOT NULL DEFAULT 0,
   locked_until INTEGER,
@@ -41,4 +41,3 @@ CREATE TABLE IF NOT EXISTS account_audit (
 );
 
 CREATE INDEX IF NOT EXISTS idx_account_audit_target ON account_audit(target_user_id, created_at DESC);
-

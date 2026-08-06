@@ -25,7 +25,7 @@ export function fromBase64Url(value) {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
-export async function derivePasswordHash(password, salt, iterations = 210000) {
+export async function derivePasswordHash(password, salt, iterations = 100000) {
   const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
   const bits = await crypto.subtle.deriveBits({
     name: "PBKDF2",
@@ -58,7 +58,7 @@ export async function verifyPassword(password, user) {
 }
 
 export async function performDummyPasswordWork(password) {
-  await derivePasswordHash(password || "invalid-password", "AAAAAAAAAAAAAAAAAAAAAA", 210000);
+  await derivePasswordHash(password || "invalid-password", "AAAAAAAAAAAAAAAAAAAAAA", 100000);
 }
 
 export function parseCookies(request) {
@@ -145,4 +145,3 @@ export function withSecurityHeaders(response, pathname = "") {
   if (pathname.endsWith(".html") || pathname.startsWith("/api/")) secured.headers.set("cache-control", "no-store");
   return secured;
 }
-

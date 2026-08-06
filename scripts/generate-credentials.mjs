@@ -6,7 +6,7 @@ if (!seedPath || !credentialsPath) {
   throw new Error("Usage: node generate-credentials.mjs <seed.sql> <private-credentials.txt>");
 }
 
-const iterations = 210000;
+const iterations = 100000;
 const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
 const accounts = [
   { username: "akihowaito-admin", displayName: "HAILI 管理员", role: "admin" },
@@ -28,9 +28,8 @@ for (const account of accounts) {
 
 const seed = [
   "-- Passwords are PBKDF2-SHA256 hashes. Plaintext credentials are never committed.",
-  "BEGIN TRANSACTION;",
   ...accounts.map((account) => `INSERT INTO users (username, display_name, role, password_hash, password_salt, password_iterations, active)\nVALUES (${sqlString(account.username)}, ${sqlString(account.displayName)}, ${sqlString(account.role)}, ${sqlString(account.hash)}, ${sqlString(account.salt)}, ${iterations}, 1)\nON CONFLICT(username) DO UPDATE SET display_name=excluded.display_name, role=excluded.role, password_hash=excluded.password_hash, password_salt=excluded.password_salt, password_iterations=excluded.password_iterations, active=1, failed_attempts=0, locked_until=NULL, updated_at=unixepoch();`),
-  "COMMIT;",
+  "DELETE FROM sessions;",
   ""
 ].join("\n\n");
 
@@ -53,4 +52,3 @@ const credentials = [
 writeFileSync(seedPath, seed, "utf8");
 writeFileSync(credentialsPath, credentials, "utf8");
 console.log(JSON.stringify({ seedPath, credentialsPath, accounts: accounts.map(({ username, displayName, role }) => ({ username, displayName, role })) }, null, 2));
-
