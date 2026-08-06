@@ -5,8 +5,17 @@ const disabledCount = document.querySelector("#disabledCount");
 const accountList = document.querySelector("#accountList");
 const accountTemplate = document.querySelector("#accountTemplate");
 const accountMessage = document.querySelector("#accountMessage");
+const createAccountButton = document.querySelector("#createAccountButton");
 const refreshButton = document.querySelector("#refreshButton");
 const logoutButton = document.querySelector("#logoutButton");
+const credentialDialog = document.querySelector("#credentialDialog");
+const createdDisplayName = document.querySelector("#createdDisplayName");
+const createdUsername = document.querySelector("#createdUsername");
+const createdPassword = document.querySelector("#createdPassword");
+const copyCredentialsButton = document.querySelector("#copyCredentialsButton");
+const copyStatus = document.querySelector("#copyStatus");
+
+let currentCredentials = null;
 
 function formatDate(timestamp) {
   if (!timestamp) return "从未登录";
@@ -24,7 +33,8 @@ function renderAccounts(users) {
     const card = accountTemplate.content.firstElementChild.cloneNode(true);
     const active = Boolean(user.active);
     card.classList.toggle("is-disabled", !active);
-    card.querySelector(".account-avatar").textContent = String(index + 1).padStart(2, "0");
+    const accountNumber = user.username.match(/(\d+)$/u)?.[1] || String(index + 1);
+    card.querySelector(".account-avatar").textContent = accountNumber.padStart(2, "0");
     card.querySelector(".account-status").textContent = active ? "正常使用" : "已经停用";
     card.querySelector("h3").textContent = user.display_name;
     card.querySelector(".account-username").textContent = user.username;
@@ -38,6 +48,66 @@ function renderAccounts(users) {
   totalCount.textContent = users.length;
   activeCount.textContent = users.filter((user) => user.active).length;
   disabledCount.textContent = users.filter((user) => !user.active).length;
+}
+
+function showCreatedCredentials(result) {
+  currentCredentials = {
+    displayName: result.user.displayName,
+    username: result.credentials.username,
+    password: result.credentials.password
+  };
+  createdDisplayName.textContent = currentCredentials.displayName;
+  createdUsername.textContent = currentCredentials.username;
+  createdPassword.textContent = currentCredentials.password;
+  copyStatus.textContent = "";
+  credentialDialog.showModal();
+}
+
+async function copyCredentials() {
+  if (!currentCredentials) return;
+  const text = [
+    "HAILI CLUB 客户登录",
+    `客户：${currentCredentials.displayName}`,
+    `账号：${currentCredentials.username}`,
+    `密码：${currentCredentials.password}`,
+    "网站：https://haili-club-monopoly.pages.dev/login"
+  ].join("\n");
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+    copyStatus.textContent = "已复制，可以直接发送给对应客户。";
+    copyCredentialsButton.textContent = "✓ 已复制";
+  } catch {
+    copyStatus.textContent = "自动复制失败，请手动复制上方账号和密码。";
+  }
+}
+
+async function createAccount() {
+  createAccountButton.disabled = true;
+  showMessage("正在生成下一个客户编号和随机密码…");
+  try {
+    const response = await fetch("/api/admin/users", { method: "POST" });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "创建账号失败");
+    await loadAccounts(false);
+    showMessage(result.message);
+    showCreatedCredentials(result);
+  } catch (error) {
+    showMessage(error.message, true);
+  } finally {
+    createAccountButton.disabled = false;
+  }
 }
 
 async function loadAccounts(announce = false) {
@@ -75,7 +145,15 @@ async function setAccountState(user, active, button) {
   }
 }
 
+createAccountButton.addEventListener("click", createAccount);
 refreshButton.addEventListener("click", () => loadAccounts(true));
+copyCredentialsButton.addEventListener("click", copyCredentials);
+credentialDialog.addEventListener("close", () => {
+  currentCredentials = null;
+  createdPassword.textContent = "—";
+  copyStatus.textContent = "";
+  copyCredentialsButton.textContent = "复制账号和密码";
+});
 logoutButton.addEventListener("click", async () => {
   logoutButton.disabled = true;
   await fetch("/api/auth/logout", { method:"POST" }).catch(() => {});

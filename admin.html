@@ -26,7 +26,13 @@
       </section>
 
       <section class="accounts-panel">
-        <div class="panel-heading"><div><span class="eyebrow">CUSTOMER ACCOUNTS</span><h2>独立客户账号</h2></div><button id="refreshButton" type="button">↻ 刷新状态</button></div>
+        <div class="panel-heading">
+          <div><span class="eyebrow">CUSTOMER ACCOUNTS</span><h2>独立客户账号</h2></div>
+          <div class="panel-actions">
+            <button class="create-account-button" id="createAccountButton" type="button"><span aria-hidden="true">＋</span> 添加客户账号</button>
+            <button id="refreshButton" type="button">↻ 刷新状态</button>
+          </div>
+        </div>
         <div class="account-message" id="accountMessage" role="status" aria-live="polite"></div>
         <div class="account-list" id="accountList" aria-live="polite">
           <div class="loading-card">正在读取账号状态…</div>
@@ -45,7 +51,25 @@
       </article>
     </template>
 
+    <dialog class="credential-dialog" id="credentialDialog" aria-labelledby="credentialTitle">
+      <form class="credential-card" method="dialog">
+        <div class="credential-icon" aria-hidden="true">✓</div>
+        <span class="eyebrow">ACCOUNT CREATED</span>
+        <h2 id="credentialTitle">新客户账号已创建</h2>
+        <p class="credential-warning">密码只会显示这一次，请先复制并妥善保存，再关闭窗口。</p>
+        <dl class="credential-values">
+          <div><dt>客户名称</dt><dd id="createdDisplayName">—</dd></div>
+          <div><dt>登录账号</dt><dd id="createdUsername">—</dd></div>
+          <div><dt>随机密码</dt><dd id="createdPassword">—</dd></div>
+        </dl>
+        <p class="copy-status" id="copyStatus" role="status" aria-live="polite"></p>
+        <div class="credential-actions">
+          <button class="copy-credentials" id="copyCredentialsButton" type="button">复制账号和密码</button>
+          <button class="close-credentials" value="close">我已保存，关闭</button>
+        </div>
+      </form>
+    </dialog>
+
     <script src="admin.js"></script>
   </body>
 </html>
-
