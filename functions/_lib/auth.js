@@ -100,6 +100,7 @@ export async function createSession(context, userId) {
   const userAgent = (context.request.headers.get("user-agent") || "").slice(0, 300);
   await context.env.DB.batch([
     context.env.DB.prepare("DELETE FROM sessions WHERE expires_at <= ?").bind(now),
+    context.env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(userId),
     context.env.DB.prepare("INSERT INTO sessions (token_hash, user_id, expires_at, created_at, last_seen_at, user_agent) VALUES (?, ?, ?, ?, ?, ?)")
       .bind(tokenHash, userId, expiresAt, now, now, userAgent)
   ]);
