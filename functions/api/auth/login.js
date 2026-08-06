@@ -7,6 +7,7 @@ import {
   sessionCookie,
   verifyPassword
 } from "../../_lib/auth.js";
+import { getClientIp, getDeviceLabel } from "../../_lib/client-info.js";
 
 export async function onRequestPost(context) {
   if (!context.env.DB) return json({ error: "登录数据库尚未配置" }, { status: 503 });
@@ -58,8 +59,14 @@ export async function onRequestPost(context) {
     return json({ error: "该账号已停用，请联系管理员" }, { status: 403 });
   }
 
-  await context.env.DB.prepare("UPDATE users SET failed_attempts = 0, locked_until = NULL, last_login_at = ?, updated_at = ? WHERE id = ?")
-    .bind(now, now, user.id).run();
+  const loginIp = getClientIp(context.request);
+  const loginDevice = getDeviceLabel(context.request);
+  await context.env.DB.prepare(`
+    UPDATE users
+       SET failed_attempts = 0, locked_until = NULL, last_login_at = ?,
+           last_login_ip = ?, last_login_device = ?, updated_at = ?
+     WHERE id = ?
+  `).bind(now, loginIp, loginDevice, now, user.id).run();
   const token = await createSession(context, user.id);
   return json({
     ok: true,
@@ -73,4 +80,3 @@ export async function onRequestPost(context) {
 export function onRequest() {
   return json({ error: "Method not allowed" }, { status: 405, headers: { allow: "POST" } });
 }
-

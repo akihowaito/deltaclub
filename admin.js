@@ -108,6 +108,14 @@ function renderAccounts(users) {
       copyAccountButton.addEventListener("click", () => resetPassword(user, copyAccountButton));
     }
     card.querySelector(".last-login").textContent = formatDate(user.last_login_at);
+    const loginIp = user.last_login_ip || "等待下次登录";
+    const loginDevice = user.last_login_device || "等待下次登录";
+    const loginIpElement = card.querySelector(".last-login-ip");
+    const loginDeviceElement = card.querySelector(".last-login-device");
+    loginIpElement.textContent = loginIp;
+    loginIpElement.title = loginIp;
+    loginDeviceElement.textContent = loginDevice;
+    loginDeviceElement.title = loginDevice;
     card.querySelector(".created-date").textContent = formatDate(user.created_at).split(" ")[0];
     const button = card.querySelector(".toggle-account");
     button.textContent = active ? "停用此账号" : "恢复此账号";

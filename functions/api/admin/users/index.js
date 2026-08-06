@@ -26,7 +26,8 @@ async function nextCustomerNumber(database) {
 export async function onRequestGet(context) {
   if (context.data.user?.role !== "admin") return json({ error: "没有管理员权限" }, { status: 403 });
   const result = await context.env.DB.prepare(`
-    SELECT id, username, display_name, active, last_login_at, created_at,
+    SELECT id, username, display_name, active, last_login_at,
+           last_login_ip, last_login_device, created_at,
            password_ciphertext, password_iv
       FROM users
      WHERE role = 'customer'
@@ -47,6 +48,8 @@ export async function onRequestGet(context) {
       display_name: user.display_name,
       active: user.active,
       last_login_at: user.last_login_at,
+      last_login_ip: user.last_login_ip,
+      last_login_device: user.last_login_device,
       created_at: user.created_at,
       password
     };
