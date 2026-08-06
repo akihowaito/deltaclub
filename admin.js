@@ -8,6 +8,10 @@ const accountMessage = document.querySelector("#accountMessage");
 const createAccountButton = document.querySelector("#createAccountButton");
 const refreshButton = document.querySelector("#refreshButton");
 const logoutButton = document.querySelector("#logoutButton");
+const createConfirmDialog = document.querySelector("#createConfirmDialog");
+const confirmCreateButton = document.querySelector("#confirmCreateButton");
+const cancelCreateButton = document.querySelector("#cancelCreateButton");
+const createConfirmStatus = document.querySelector("#createConfirmStatus");
 const credentialDialog = document.querySelector("#credentialDialog");
 const createdDisplayName = document.querySelector("#createdDisplayName");
 const createdUsername = document.querySelector("#createdUsername");
@@ -16,6 +20,7 @@ const copyCredentialsButton = document.querySelector("#copyCredentialsButton");
 const copyStatus = document.querySelector("#copyStatus");
 
 let currentCredentials = null;
+let accountCreationPending = false;
 
 function formatDate(timestamp) {
   if (!timestamp) return "从未登录";
@@ -94,20 +99,40 @@ async function copyCredentials() {
 }
 
 async function createAccount() {
+  accountCreationPending = true;
   createAccountButton.disabled = true;
-  showMessage("正在生成下一个客户编号和随机密码…");
+  confirmCreateButton.disabled = true;
+  cancelCreateButton.disabled = true;
+  confirmCreateButton.textContent = "正在创建…";
+  createConfirmStatus.classList.remove("is-error");
+  createConfirmStatus.textContent = "正在生成下一个客户编号和随机密码…";
   try {
     const response = await fetch("/api/admin/users", { method: "POST" });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "创建账号失败");
+    createConfirmDialog.close("created");
     await loadAccounts(false);
     showMessage(result.message);
     showCreatedCredentials(result);
   } catch (error) {
+    createConfirmStatus.classList.add("is-error");
+    createConfirmStatus.textContent = error.message;
     showMessage(error.message, true);
   } finally {
+    accountCreationPending = false;
     createAccountButton.disabled = false;
+    confirmCreateButton.disabled = false;
+    cancelCreateButton.disabled = false;
+    confirmCreateButton.textContent = "确认创建";
   }
+}
+
+function openCreateConfirmation() {
+  createConfirmStatus.textContent = "";
+  createConfirmStatus.classList.remove("is-error");
+  confirmCreateButton.disabled = false;
+  confirmCreateButton.textContent = "确认创建";
+  createConfirmDialog.showModal();
 }
 
 async function loadAccounts(announce = false) {
@@ -145,7 +170,11 @@ async function setAccountState(user, active, button) {
   }
 }
 
-createAccountButton.addEventListener("click", createAccount);
+createAccountButton.addEventListener("click", openCreateConfirmation);
+confirmCreateButton.addEventListener("click", createAccount);
+createConfirmDialog.addEventListener("cancel", (event) => {
+  if (accountCreationPending) event.preventDefault();
+});
 refreshButton.addEventListener("click", () => loadAccounts(true));
 copyCredentialsButton.addEventListener("click", copyCredentials);
 credentialDialog.addEventListener("close", () => {

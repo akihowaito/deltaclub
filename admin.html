@@ -51,7 +51,21 @@
       </article>
     </template>
 
-    <dialog class="credential-dialog" id="credentialDialog" aria-labelledby="credentialTitle">
+    <dialog class="modal-dialog confirm-dialog" id="createConfirmDialog" aria-labelledby="createConfirmTitle" aria-describedby="createConfirmDescription">
+      <form class="confirm-card" method="dialog">
+        <div class="confirm-icon" aria-hidden="true">＋</div>
+        <span class="eyebrow">CREATE CUSTOMER ACCOUNT</span>
+        <h2 id="createConfirmTitle">确认添加新客户？</h2>
+        <p id="createConfirmDescription">系统会自动延续客户 ID，并生成一组只显示一次的随机密码。</p>
+        <p class="confirm-status" id="createConfirmStatus" role="status" aria-live="polite"></p>
+        <div class="confirm-actions">
+          <button class="cancel-create" id="cancelCreateButton" value="cancel">取消</button>
+          <button class="confirm-create" id="confirmCreateButton" type="button">确认创建</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal-dialog credential-dialog" id="credentialDialog" aria-labelledby="credentialTitle">
       <form class="credential-card" method="dialog">
         <div class="credential-icon" aria-hidden="true">✓</div>
         <span class="eyebrow">ACCOUNT CREATED</span>
